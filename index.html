@@ -1,0 +1,3033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DemoMart India — Customer Support & Order Portal (Sandbox)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            navy: {
+              950: '#090E1A',
+              900: '#0F172A',
+              800: '#1E293B',
+              700: '#334155',
+            },
+            lavender: {
+              50: '#EEF2FF',
+              100: '#E0E7FF',
+              200: '#C7D2FE',
+              500: '#6366F1',
+              600: '#4F46E5',
+              700: '#4338CA',
+            },
+            limebrand: {
+              50: '#F0FDF4',
+              100: '#DCFCE7',
+              500: '#22C55E',
+              600: '#16A34A',
+              700: '#15803D',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    /* Custom scrollbar for code blocks */
+    pre::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    pre::-webkit-scrollbar-track {
+      background: #0F172A;
+    }
+    pre::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    .focus-ring:focus-visible {
+      outline: 2px solid #4F46E5;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A]">
+
+  <!-- 1. PERSISTENT SANDBOX ENVIRONMENT BANNER (REQUIRED ON EVERY PAGE) -->
+  <div id="sandbox-banner" data-testid="sandbox-banner" class="bg-navy-950 text-amber-200 border-b border-navy-800 text-xs sm:text-sm py-2 px-4">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 font-medium">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
+          SANDBOX MODE
+        </span>
+        <span>Sandbox merchant environment — no real purchases, refunds, or personal information.</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="toggle-project-docs"
+          data-testid="toggle-project-docs"
+          onclick="window.DemoMartApp.toggleProjectDocsModal()"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-lavender-600 hover:bg-lavender-500 text-white font-medium text-xs transition shadow-sm"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          <span>Project Files &amp; README (TinyFish Script)</span>
+        </button>
+        <button
+          type="button"
+          id="reset-sandbox-btn"
+          data-testid="reset-sandbox-btn"
+          onclick="window.DemoMartApp.resetSandbox()"
+          class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-navy-800 hover:bg-navy-700 text-slate-200 border border-navy-700 text-xs transition"
+          title="Clear submitted requests and restore initial sandbox state"
+        >
+          <span>Reset Sandbox State</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. AUTOMATION & ROUTE INSPECTOR BAR (Helps headless browsers & human testers verify exact URL paths) -->
+  <div class="bg-slate-100 border-b border-slate-200 py-1.5 px-4 text-xs text-slate-600">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Active Route:</span>
+        <code id="current-route-path" data-testid="current-route-path" class="font-mono font-semibold text-lavender-700 bg-lavender-50 px-2 py-0.5 rounded border border-lavender-200">/</code>
+        <span id="auth-status-indicator" data-testid="auth-status-indicator" class="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-500 ml-2"></span>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[11px] text-slate-500 hidden md:inline">Quick Jump:</span>
+        <button type="button" onclick="window.DemoMartApp.navigate('/refund-policy')" class="text-[11px] font-mono text-slate-700 hover:text-lavender-600 underline">/refund-policy</button>
+        <button type="button" onclick="window.DemoMartApp.navigate('/login')" class="text-[11px] font-mono text-slate-700 hover:text-lavender-600 underline">/login</button>
+        <button type="button" onclick="window.DemoMartApp.navigate('/signup')" class="text-[11px] font-mono text-slate-700 hover:text-lavender-600 underline">/signup</button>
+        <button type="button" onclick="window.DemoMartApp.navigate('/orders/QA-ORDER-2026-1001')" class="text-[11px] font-mono text-slate-700 hover:text-lavender-600 underline">/orders/QA-ORDER-2026-1001</button>
+        <button type="button" onclick="window.DemoMartApp.navigate('/refund-request')" class="text-[11px] font-mono text-slate-700 hover:text-lavender-600 underline">/refund-request</button>
+        <button type="button" onclick="window.DemoMartApp.navigate('/requests')" class="text-[11px] font-mono text-slate-700 hover:text-lavender-600 underline">/requests</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. PRIMARY MERCHANT NAVIGATION HEADER -->
+  <header class="bg-navy-900 text-white sticky top-0 z-30 shadow-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-16 gap-4">
+        <!-- Brand Logo -->
+        <a
+          href="/"
+          data-route="/"
+          data-testid="nav-brand"
+          class="flex items-center gap-2.5 group focus-ring rounded-lg py-1"
+        >
+          <div class="w-9 h-9 rounded-lg bg-lavender-600 flex items-center justify-center shadow-inner group-hover:bg-lavender-500 transition">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-lg tracking-tight text-white">DemoMart</span>
+              <span class="text-xs font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-lavender-500/20 text-lavender-200 border border-lavender-400/30">India</span>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-none">Official Order &amp; Claims Portal</p>
+          </div>
+        </a>
+
+        <!-- Primary Navigation Links -->
+        <nav aria-label="Main Navigation" class="hidden md:flex items-center gap-1">
+          <a href="/" data-route="/" data-testid="nav-home" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-navy-800 transition">
+            Home
+          </a>
+          <a href="/orders" data-route="/orders" data-testid="nav-orders" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-navy-800 transition">
+            Orders
+          </a>
+          <a href="/refund-policy" data-route="/refund-policy" data-testid="nav-refund-policy" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-navy-800 transition">
+            Refund Policy
+          </a>
+          <a href="/help-centre" data-route="/help-centre" data-testid="nav-help-centre" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-navy-800 transition">
+            Help Centre
+          </a>
+          <a href="/requests" data-route="/requests" data-testid="nav-my-requests" class="nav-link px-3 py-2 rounded-lg text-sm font-medium text-slate-200 hover:text-white hover:bg-navy-800 transition flex items-center gap-1.5">
+            <span>My Requests</span>
+            <span id="nav-requests-badge" data-testid="nav-requests-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-lavender-600 text-white">0</span>
+          </a>
+        </nav>
+
+        <!-- Right Auth / Session Controls -->
+        <div id="header-auth-area" class="flex items-center gap-2">
+          <!-- Dynamically populated by renderHeaderAuth() -->
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Bar -->
+      <nav aria-label="Mobile Navigation" class="flex md:hidden items-center gap-1 overflow-x-auto py-2 border-t border-navy-800 text-xs">
+        <a href="/" data-route="/" data-testid="mobile-nav-home" class="nav-link px-2.5 py-1.5 rounded text-slate-200 whitespace-nowrap">Home</a>
+        <a href="/orders" data-route="/orders" data-testid="mobile-nav-orders" class="nav-link px-2.5 py-1.5 rounded text-slate-200 whitespace-nowrap">Orders</a>
+        <a href="/refund-policy" data-route="/refund-policy" data-testid="mobile-nav-refund-policy" class="nav-link px-2.5 py-1.5 rounded text-slate-200 whitespace-nowrap">Refund Policy</a>
+        <a href="/help-centre" data-route="/help-centre" data-testid="mobile-nav-help-centre" class="nav-link px-2.5 py-1.5 rounded text-slate-200 whitespace-nowrap">Help Centre</a>
+        <a href="/requests" data-route="/requests" data-testid="mobile-nav-my-requests" class="nav-link px-2.5 py-1.5 rounded text-slate-200 whitespace-nowrap">My Requests</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 4. TOAST / NOTIFICATION BANNER (No native alert() used anywhere) -->
+  <div id="global-toast" data-testid="global-toast" class="hidden fixed bottom-5 right-5 z-50 max-w-md bg-navy-900 text-white px-4 py-3 rounded-xl shadow-xl border border-navy-700 flex items-center gap-3">
+    <span id="global-toast-icon" class="w-2.5 h-2.5 rounded-full bg-limebrand-500 shrink-0"></span>
+    <span id="global-toast-message" class="text-sm font-medium"></span>
+  </div>
+
+  <!-- 5. MAIN VIEWPORT CONTAINER -->
+  <main id="app-main" data-testid="app-main" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+    <!-- Dynamic route view rendered here -->
+  </main>
+
+  <!-- 6. FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-navy-900">DemoMart India Sandbox</span>
+        <span>•</span>
+        <span>Built for ClaimBack AI Refund Workflow &amp; TinyFish Browser Automation QA</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/refund-policy" data-route="/refund-policy" class="hover:text-lavender-600 underline">Refund Policy</a>
+        <a href="/refund-request" data-route="/refund-request" class="hover:text-lavender-600 underline">Refund Request Form</a>
+        <a href="/orders" data-route="/orders" class="hover:text-lavender-600 underline">Sample Order</a>
+        <button type="button" onclick="window.DemoMartApp.toggleProjectDocsModal()" class="hover:text-lavender-600 underline font-medium">Vercel Project Files &amp; README</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 7. DEPLOYABLE VERCEL PROJECT FILES & README MODAL (Includes TinyFish Test Script) -->
+  <div id="project-docs-modal" data-testid="project-docs-modal" class="hidden fixed inset-0 z-50 bg-navy-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="bg-navy-900 text-white px-6 py-4 flex items-center justify-between border-b border-navy-800">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 text-[11px] font-mono uppercase bg-lavender-600 text-white rounded font-semibold">Vercel-Ready Repo</span>
+            <h2 class="text-lg font-bold">Deployable Project Folder &amp; TinyFish Automation Docs</h2>
+          </div>
+          <p class="text-xs text-slate-300 mt-0.5">Complete lightweight no-framework Vercel structure (`README.md`, `vercel.json`, `package.json`, `api/requests.js`)</p>
+        </div>
+        <button
+          type="button"
+          data-testid="close-project-docs"
+          onclick="window.DemoMartApp.toggleProjectDocsModal()"
+          class="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-navy-800 transition"
+          aria-label="Close modal"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- File Tabs -->
+      <div class="bg-slate-100 px-6 py-2.5 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-1.5 overflow-x-auto">
+          <button type="button" onclick="window.DemoMartApp.selectDocTab('readme')" id="doc-tab-readme" data-testid="doc-tab-readme" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-navy-900 text-white">README.md (with TinyFish Script)</button>
+          <button type="button" onclick="window.DemoMartApp.selectDocTab('vercel')" id="doc-tab-vercel" data-testid="doc-tab-vercel" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-white text-slate-700 hover:bg-slate-200">vercel.json</button>
+          <button type="button" onclick="window.DemoMartApp.selectDocTab('api')" id="doc-tab-api" data-testid="doc-tab-api" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-white text-slate-700 hover:bg-slate-200">api/requests.js</button>
+          <button type="button" onclick="window.DemoMartApp.selectDocTab('package')" id="doc-tab-package" data-testid="doc-tab-package" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-white text-slate-700 hover:bg-slate-200">package.json</button>
+        </div>
+        <button
+          type="button"
+          id="copy-doc-btn"
+          data-testid="copy-doc-btn"
+          onclick="window.DemoMartApp.copyActiveDoc()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-lavender-600 hover:bg-lavender-700 text-white transition"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <span>Copy File Contents</span>
+        </button>
+      </div>
+
+      <!-- Code Content -->
+      <div class="p-6 overflow-y-auto flex-1 bg-navy-950 text-slate-100">
+        <pre id="doc-code-content" data-testid="doc-code-content" class="text-xs font-mono leading-relaxed whitespace-pre-wrap break-words"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. APPLICATION LOGIC & ROUTER -->
+  <script>
+    (function () {
+      // ============================================================================
+      // DETERMINISTIC SAMPLE CONSTANTS (Matching ClaimBack Interoperability Spec)
+      // ============================================================================
+      const SANDBOX_CREDENTIALS = {
+        email: 'demo.customer@demomart.test',
+        password: 'DemoPass123!',
+        customerName: 'Demo Customer'
+      };
+
+      const SAMPLE_ORDER = {
+        orderId: 'QA-ORDER-2026-1001',
+        merchant: 'DemoMart India',
+        customer: 'Demo Customer',
+        customerEmail: 'demo.customer@demomart.test',
+        purchaseDate: '2026-10-10',
+        deliveryDate: '2026-10-12',
+        item: 'DemoMart Bluetooth Earbuds',
+        sku: 'DM-AUDIO-BT53-BLK',
+        amountNumeric: 1299,
+        amountFormatted: '₹1,299',
+        currency: 'INR',
+        status: 'Delivered',
+        shippingAddress: 'Flat 402, Indiranagar Stage 2, Bengaluru, Karnataka 560038 (Sandbox Address)',
+        paymentMethod: 'Sandbox UPI (No real payment)',
+        eligibilityHint: 'Damaged product claims may be raised within 7 days of delivery.',
+        eligibilityWindowDays: 7
+      };
+
+      const CLAIMBACK_PACKET = {
+        merchant: 'DemoMart India',
+        orderId: 'QA-ORDER-2026-1001',
+        amount: '1299',
+        currency: 'INR',
+        issue: 'Product arrived damaged',
+        description: 'The right earbud arrived cracked and does not charge.',
+        evidenceSummary: 'Synthetic ClaimBack QA receipt verified.',
+        policyResult: 'Damaged product claims may be raised within 7 days of delivery.'
+      };
+
+      const STORAGE_KEYS = {
+        USERS: 'demomart_users_v1',
+        AUTH: 'demomart_session_v1',
+        REQUESTS: 'demomart_sandbox_requests_v1',
+        DRAFT_FORM: 'demomart_sandbox_draft_form_v1'
+      };
+
+      // ============================================================================
+      // VERCEL REPOSITORY DOCUMENTATION FILES (For inspection & export)
+      // ============================================================================
+      const PROJECT_FILES = {
+        readme: `# DemoMart India — Sandbox Merchant Portal for ClaimBack
+
+A deterministic, automation-friendly sandbox merchant web application built to test AI-assisted refund workflows (**ClaimBack**) and browser automation agents (**TinyFish**).
+
+> **Safety Boundary:** This is a fictional sandbox environment only. No real brands, payments, customer PII, emails, or shipping integrations are used.
+
+---
+
+## Project Structure
+
+\`\`\`text
+demomart-india-sandbox/
+├── index.html          # Single-page storefront, order portal, signup/login & refund workflow
+├── api/
+│   └── requests.js     # Optional Vercel Serverless API endpoint for sandbox refund requests
+├── vercel.json         # Clean SPA URL routing & API rewrites for Vercel
+├── package.json        # Zero-dependency local dev & Vercel deployment configuration
+└── README.md           # Documentation & TinyFish test script
+\`\`\`
+
+---
+
+## Local Run Instructions
+
+You can run DemoMart India locally using any static server or the Vercel CLI:
+
+### Option 1: Using npx serve (No install required)
+\`\`\`bash
+npx serve -s . -l 3000
+\`\`\`
+Then open \`http://localhost:3000\` in your browser.
+
+### Option 2: Using Vercel CLI (Includes serverless \`/api/requests\` route)
+\`\`\`bash
+npm i -g vercel
+vercel dev
+\`\`\`
+
+---
+
+## Deploying to Vercel
+
+1. Push this project folder to a GitHub/GitLab repository or run directly from your terminal:
+   \`\`\`bash
+   vercel --prod
+   \`\`\`
+2. \`vercel.json\` automatically rewrites all clean paths (\`/refund-policy\`, \`/login\`, \`/signup\`, \`/orders\`, \`/orders/QA-ORDER-2026-1001\`, \`/refund-request\`, \`/requests\`, \`/requests/:id\`) to \`index.html\`.
+
+---
+
+## Sandbox Credentials & Custom Account Registration
+
+- **Default QA Customer Email:** \`demo.customer@demomart.test\`
+- **Default QA Password:** \`DemoPass123!\`
+- **Custom Sandbox Sign Up (\`/signup\`):** Test scripts or users can also register new sandbox accounts (persisted in \`localStorage\` under \`demomart_users_v1\`), which automatically provisions \`QA-ORDER-2026-1001\` for their account.
+- **Sample Order ID:** \`QA-ORDER-2026-1001\`
+- **Item:** \`DemoMart Bluetooth Earbuds\` (\`₹1,299\` / \`1299 INR\`)
+- **Purchase Date:** \`2026-10-10\` | **Delivery Date:** \`2026-10-12\` | **Status:** \`Delivered\`
+
+---
+
+## TinyFish Test Script (Browser Automation Specification)
+
+Use the following 6-step TinyFish automation test plan to validate ClaimBack end-to-end:
+
+### Step 1: Read \`/refund-policy\`
+1. Navigate to \`/refund-policy\`.
+2. Verify \`[data-testid="policy-eligibility-summary"]\` is visible without logging in.
+3. Confirm the policy rules:
+   - Refund requests for damaged products are allowed within **7 days of delivery**.
+   - Customer must provide **order ID, reason, and supporting evidence**.
+   - Refunds are reviewed within **3–5 business days**.
+   - Products damaged due to customer misuse are excluded.
+
+### Step 2: Sign in using sandbox credentials (or register at \`/signup\`)
+1. Navigate to \`/login\` (or click \`[data-testid="nav-login"]\`).
+2. Fill \`#login-email\` (\`[data-testid="login-email"]\`) with \`demo.customer@demomart.test\`.
+3. Fill \`#login-password\` (\`[data-testid="login-password"]\`) with \`DemoPass123!\`.
+4. Click \`#login-submit\` (\`[data-testid="login-submit"]\`).
+5. Confirm redirect to \`/orders\` and logged-in badge \`[data-testid="user-session-badge"]\`.
+
+### Step 3: Open the QA order
+1. On \`/orders\`, locate \`[data-testid="order-row-QA-ORDER-2026-1001"]\`.
+2. Click \`[data-testid="view-order-btn"]\` to inspect \`/orders/QA-ORDER-2026-1001\` and verify policy eligibility hint: *"Damaged product claims may be raised within 7 days of delivery."*
+3. Click \`[data-testid="order-detail-request-refund-btn"]\` (or navigate to \`/refund-request\`).
+
+### Step 4: Fill refund fields with the sample ClaimBack claim packet
+1. **Step 1 (Verify Order):**
+   - Enter \`QA-ORDER-2026-1001\` into \`#order-id\` (\`[data-testid="order-id"]\`).
+   - Click \`#find-order-btn\` (\`[data-testid="find-order-btn"]\`).
+   - Verify \`[data-testid="verified-order-summary"]\` appears, then click \`[data-testid="step-1-continue-btn"]\`.
+2. **Step 2 (Refund Details):**
+   - Select \`Product arrived damaged\` in \`#refund-reason\` (\`[data-testid="refund-reason"]\`).
+   - Fill \`#refund-description\` (\`[data-testid="refund-description"]\`) with:
+     \`The right earbud arrived cracked and does not charge.\`
+   - Verify or fill \`#refund-amount\` (\`[data-testid="refund-amount"]\`) with \`1299\`.
+   - Fill \`#evidence-summary\` (\`[data-testid="evidence-summary"]\`) with:
+     \`Synthetic ClaimBack QA receipt verified.\`
+   - Click \`#review-request-btn\` (\`[data-testid="review-request-btn"]\`) to advance to Step 3.
+
+### Step 5: Stop at the review page unless explicit sandbox consent is provided
+1. Verify \`[data-testid="refund-review-card"]\` displays all supplied ClaimBack packet fields accurately.
+2. Verify \`[data-testid="sandbox-warning-banner"]\` states: *"This is a sandbox request. No money will be refunded."*
+3. Verify \`#customer-consent\` (\`[data-testid="customer-consent"]\`) is **unchecked** by default and \`#submit-refund-request\` (\`[data-testid="submit-refund-request"]\`) is **disabled**.
+4. **CRITICAL AUTOMATION GATE:** Pause here for human-in-the-loop verification unless explicit sandbox consent is instructed.
+
+### Step 6: Submit only after the sandbox consent checkbox is checked
+1. Check \`#customer-consent\` (\`[data-testid="customer-consent"]\`).
+2. Confirm \`#submit-refund-request\` becomes enabled.
+3. Click \`#submit-refund-request\`.
+4. Confirm redirect to \`/requests/REQ-2026-9001\`, displaying \`[data-testid="confirmation-panel"]\`, \`[data-testid="request-timeline"]\`, and \`[data-testid="request-audit-log"]\` with \`"Submitted in DemoMart sandbox only"\`.`,
+
+        vercel: `{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}`,
+
+        api: `// api/requests.js — Vercel Serverless Function for DemoMart India Sandbox
+// Provides deterministic mock persistence & verification for ClaimBack / TinyFish runs.
+
+const SAMPLE_ORDER = {
+  orderId: "QA-ORDER-2026-1001",
+  merchant: "DemoMart India",
+  customer: "Demo Customer",
+  purchaseDate: "2026-10-10",
+  deliveryDate: "2026-10-12",
+  item: "DemoMart Bluetooth Earbuds",
+  amount: 1299,
+  currency: "INR",
+  status: "Delivered"
+};
+
+let inMemoryRequests = [];
+
+export default function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method === "GET") {
+    return res.status(200).json({
+      environment: "Submitted in DemoMart sandbox only",
+      sampleOrder: SAMPLE_ORDER,
+      requests: inMemoryRequests
+    });
+  }
+
+  if (req.method === "POST") {
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    if (!body.consentConfirmed) {
+      return res.status(400).json({
+        error: "Explicit customer consent (customer-consent) is required before sandbox submission."
+      });
+    }
+
+    const newRequest = {
+      id: body.id || \`REQ-2026-\${9001 + inMemoryRequests.length}\`,
+      orderId: body.orderId || "QA-ORDER-2026-1001",
+      merchant: "DemoMart India",
+      item: SAMPLE_ORDER.item,
+      reason: body.reason || "Product arrived damaged",
+      description: body.description || "",
+      amount: body.amount || "₹1,299",
+      currency: "INR",
+      evidenceSummary: body.evidenceSummary || "",
+      receiptFileName: body.receiptFileName || "claimback-qa-receipt.pdf",
+      policyResult: "Damaged product claims may be raised within 7 days of delivery.",
+      status: "Received for review",
+      consentRecorded: true,
+      createdAt: new Date().toISOString(),
+      environmentNote: "Submitted in DemoMart sandbox only"
+    };
+
+    inMemoryRequests.unshift(newRequest);
+    return res.status(201).json({ ok: true, request: newRequest });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}`,
+
+        package: `{
+  "name": "demomart-india-sandbox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sandbox merchant portal for testing AI-assisted refund workflows (ClaimBack & TinyFish)",
+  "scripts": {
+    "start": "npx serve -s . -l 3000",
+    "dev": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}`
+      };
+
+      // ============================================================================
+      // APPLICATION STATE MANAGEMENT (localStorage backed + in-memory fallback)
+      // ============================================================================
+      function getDefaultDraftForm() {
+        return {
+          step: 1,
+          orderIdInput: '',
+          orderVerified: false,
+          reason: '',
+          description: '',
+          amount: '₹1,299',
+          evidenceSummary: '',
+          receiptFileName: '',
+          consentChecked: false,
+          validationError: ''
+        };
+      }
+
+      let appState = {
+        currentPath: '/',
+        postLoginRedirect: '/orders',
+        activeDocTab: 'readme',
+        users: loadFromStorage(STORAGE_KEYS.USERS, []),
+        auth: loadFromStorage(STORAGE_KEYS.AUTH, {
+          isLoggedIn: false,
+          email: null,
+          name: null,
+          loginTime: null
+        }),
+        requests: loadFromStorage(STORAGE_KEYS.REQUESTS, []),
+        draftForm: loadFromStorage(STORAGE_KEYS.DRAFT_FORM, getDefaultDraftForm())
+      };
+
+      function getActiveOrder() {
+        const customerName = (appState.auth && appState.auth.isLoggedIn && appState.auth.name)
+          ? appState.auth.name
+          : SAMPLE_ORDER.customer;
+        const customerEmail = (appState.auth && appState.auth.isLoggedIn && appState.auth.email)
+          ? appState.auth.email
+          : SAMPLE_ORDER.customerEmail;
+        return Object.assign({}, SAMPLE_ORDER, {
+          customer: customerName,
+          customerEmail: customerEmail
+        });
+      }
+
+      function loadFromStorage(key, fallback) {
+        try {
+          const raw = window.localStorage.getItem(key);
+          if (!raw) return fallback;
+          return JSON.parse(raw);
+        } catch (err) {
+          return fallback;
+        }
+      }
+
+      function saveToStorage(key, value) {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(value));
+        } catch (err) {
+          // Ignore storage quota / iframe privacy blocks gracefully
+        }
+      }
+
+      function persistState() {
+        saveToStorage(STORAGE_KEYS.USERS, appState.users);
+        saveToStorage(STORAGE_KEYS.AUTH, appState.auth);
+        saveToStorage(STORAGE_KEYS.REQUESTS, appState.requests);
+        saveToStorage(STORAGE_KEYS.DRAFT_FORM, appState.draftForm);
+      }
+
+      // ============================================================================
+      // TOAST HELPER
+      // ============================================================================
+      let toastTimer = null;
+      function showToast(message, type = 'success') {
+        const toast = document.getElementById('global-toast');
+        const msgEl = document.getElementById('global-toast-message');
+        const iconEl = document.getElementById('global-toast-icon');
+        if (!toast || !msgEl) return;
+
+        msgEl.textContent = message;
+        iconEl.className = 'w-2.5 h-2.5 rounded-full shrink-0 ' + (
+          type === 'error' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-400' : 'bg-limebrand-500'
+        );
+        toast.classList.remove('hidden');
+
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 4000);
+      }
+
+      // ============================================================================
+      // ROUTER (Supports pushState, hash fallback, and link interception)
+      // ============================================================================
+      function normalizePath(rawPath) {
+        if (!rawPath) return '/';
+        let cleaned = rawPath.trim();
+        if (cleaned.startsWith('#')) cleaned = cleaned.slice(1);
+        // Strip query strings if any, but handle ?orderId= prefill
+        const [pathPart, queryPart] = cleaned.split('?');
+        if (queryPart) {
+          const params = new URLSearchParams(queryPart);
+          if (params.get('orderId') === SAMPLE_ORDER.orderId) {
+            appState.draftForm.orderIdInput = SAMPLE_ORDER.orderId;
+            appState.draftForm.orderVerified = true;
+            persistState();
+          }
+        }
+        let path = pathPart || '/';
+        if (!path.startsWith('/')) path = '/' + path;
+        if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+        return path;
+      }
+
+      function navigate(targetPath, options = {}) {
+        const path = normalizePath(targetPath);
+        appState.currentPath = path;
+
+        // Try history.pushState cleanly (wrapped in try/catch for sandboxed iframes)
+        if (!options.replace) {
+          try {
+            window.history.pushState({ path }, '', path);
+          } catch (e) {
+            window.location.hash = path;
+          }
+        }
+
+        renderApp();
+        if (!options.preserveScroll) {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      }
+
+      // Intercept clicks on <a data-route="...">
+      document.addEventListener('click', function (e) {
+        const link = e.target.closest('a[data-route]');
+        if (link) {
+          e.preventDefault();
+          const route = link.getAttribute('data-route') || link.getAttribute('href');
+          navigate(route);
+        }
+      });
+
+      window.addEventListener('popstate', function (e) {
+        const path = (e.state && e.state.path) ? e.state.path : normalizePath(window.location.pathname);
+        appState.currentPath = path;
+        renderApp();
+      });
+
+      // ============================================================================
+      // HEADER & NAVIGATION STATUS RENDERING
+      // ============================================================================
+      function renderChrome() {
+        // Update Route Inspector Bar
+        const routeEl = document.getElementById('current-route-path');
+        if (routeEl) routeEl.textContent = appState.currentPath;
+
+        // Update Auth Status Indicator in Inspector Bar
+        const authIndicator = document.getElementById('auth-status-indicator');
+        if (authIndicator) {
+          if (appState.auth.isLoggedIn) {
+            authIndicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-limebrand-500"></span><span>Signed in as <strong class="font-mono text-slate-700">${escapeHtml(appState.auth.email)}</strong></span>`;
+          } else {
+            authIndicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>Guest (Not signed in)</span>`;
+          }
+        }
+
+        // Update Requests count badge
+        const reqBadge = document.getElementById('nav-requests-badge');
+        if (reqBadge) {
+          reqBadge.textContent = String(appState.requests.length);
+        }
+
+        // Highlight active nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+          const linkRoute = link.getAttribute('data-route');
+          const isActive =
+            (linkRoute === '/' && appState.currentPath === '/') ||
+            (linkRoute !== '/' && appState.currentPath.startsWith(linkRoute));
+
+          if (isActive) {
+            link.classList.add('bg-navy-800', 'text-white', 'ring-1', 'ring-lavender-500/40');
+          } else {
+            link.classList.remove('bg-navy-800', 'text-white', 'ring-1', 'ring-lavender-500/40');
+          }
+        });
+
+        // Header Auth Controls
+        const authArea = document.getElementById('header-auth-area');
+        if (!authArea) return;
+
+        if (appState.auth.isLoggedIn) {
+          authArea.innerHTML = `
+            <div
+              id="user-session-badge"
+              data-testid="user-session-badge"
+              class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-navy-800 border border-navy-700 text-xs"
+            >
+              <span class="w-2 h-2 rounded-full bg-limebrand-500"></span>
+              <span data-testid="logged-in-user-badge" class="font-medium text-slate-200">${escapeHtml(appState.auth.name)}</span>
+              <span class="text-slate-400 font-mono text-[11px]">(${escapeHtml(appState.auth.email)})</span>
+            </div>
+            <button
+              type="button"
+              id="nav-logout"
+              data-testid="nav-logout"
+              onclick="window.DemoMartApp.logout()"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-navy-800 hover:bg-rose-950/80 text-slate-200 hover:text-rose-200 border border-navy-700 transition"
+            >
+              Sign out
+            </button>
+          `;
+        } else {
+          authArea.innerHTML = `
+            <a
+              href="/login"
+              data-route="/login"
+              id="nav-login"
+              data-testid="nav-login"
+              class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-200 hover:text-white hover:bg-navy-800 border border-navy-700 transition"
+            >
+              <span>Sign in</span>
+            </a>
+            <a
+              href="/signup"
+              data-route="/signup"
+              id="nav-signup"
+              data-testid="nav-signup"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-lavender-600 hover:bg-lavender-500 text-white transition shadow-xs"
+            >
+              <span>Create account</span>
+            </a>
+          `;
+        }
+      }
+
+      // ============================================================================
+      // ROUTE VIEWS
+      // ============================================================================
+
+      // 1. HOME PAGE (/)
+      function renderHomeView() {
+        return `
+          <div data-testid="page-home" class="space-y-10">
+            <!-- Hero Split Section -->
+            <section class="bg-navy-900 rounded-2xl text-white p-6 sm:p-10 shadow-lg border border-navy-800 relative overflow-hidden">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Left Column: Storefront Intro -->
+                <div class="lg:col-span-7 space-y-5">
+                  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lavender-500/20 border border-lavender-400/30 text-lavender-200 text-xs font-medium">
+                    <span>DemoMart India Customer Portal</span>
+                    <span>•</span>
+                    <span class="font-mono">QA-READY</span>
+                  </div>
+                  <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    Transparent Order Support &amp; Hassle-Free Claims.
+                  </h1>
+                  <p class="text-slate-300 text-base sm:text-lg leading-relaxed max-w-2xl">
+                    Welcome to DemoMart India’s sandbox support portal. Review our public 7-day damaged-item refund policy, inspect sample order deliveries, and test structured AI-assisted refund claims with explicit customer consent.
+                  </p>
+                  <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <a
+                      href="/orders"
+                      data-route="/orders"
+                      data-testid="hero-orders-btn"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-500 text-white font-semibold text-sm transition shadow-sm"
+                    >
+                      <span>View Sample Orders</span>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                    <a
+                      href="/refund-policy"
+                      data-route="/refund-policy"
+                      data-testid="hero-policy-btn"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-100 border border-navy-700 font-semibold text-sm transition"
+                    >
+                      <span>Read Refund Policy</span>
+                    </a>
+                    <a
+                      href="/login"
+                      data-route="/login"
+                      data-testid="hero-signin-btn"
+                      class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-slate-300 hover:text-white font-medium text-sm transition"
+                    >
+                      <span>${appState.auth.isLoggedIn ? 'Switch Sandbox Account' : 'Sign in / Create Account'}</span>
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Right Column: Required "Test refund journey" Card -->
+                <div class="lg:col-span-5">
+                  <div
+                    id="test-refund-journey-card"
+                    data-testid="test-refund-journey-card"
+                    class="bg-white text-navy-900 rounded-xl p-6 shadow-xl border-2 border-lavender-500/40 space-y-4"
+                  >
+                    <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                      <div>
+                        <span class="text-[11px] font-mono uppercase tracking-wider font-bold text-lavender-600">ClaimBack QA Shortcut</span>
+                        <h2 class="text-lg font-bold text-navy-900">Test refund journey</h2>
+                      </div>
+                      <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-limebrand-100 text-limebrand-700 border border-limebrand-500/30">
+                        Eligible Order Ready
+                      </span>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-lg p-3.5 border border-slate-200 space-y-1.5 text-xs">
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Sample Order ID:</span>
+                        <code class="font-mono font-bold text-navy-900">QA-ORDER-2026-1001</code>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Item:</span>
+                        <span class="font-semibold text-navy-900">DemoMart Bluetooth Earbuds</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Amount &amp; Status:</span>
+                        <span class="font-semibold text-navy-900 tabular-nums">₹1,299 • Delivered (2026-10-12)</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Sandbox Account:</span>
+                        <code class="font-mono text-slate-700">demo.customer@demomart.test</code>
+                      </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                      Jump directly to the sample order or launch the 3-step refund request workflow to test ClaimBack packet entry and explicit customer consent.
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      <button
+                        type="button"
+                        data-testid="journey-open-sample-order-btn"
+                        onclick="window.DemoMartApp.openSampleOrderFromHome()"
+                        class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-navy-900 hover:bg-navy-800 text-white text-xs font-semibold transition"
+                      >
+                        <span>Open Sample Order</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                      </button>
+                      <a
+                        href="/refund-request"
+                        data-route="/refund-request"
+                        data-testid="journey-open-refund-form-btn"
+                        class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-lavender-600 hover:bg-lavender-700 text-white text-xs font-semibold transition"
+                      >
+                        <span>Start Refund Form</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Storefront Quick Navigation Cards -->
+            <section aria-labelledby="portal-sections-heading" class="space-y-4">
+              <div class="flex items-center justify-between">
+                <h2 id="portal-sections-heading" class="text-xl font-bold text-navy-900">Self-Service Support &amp; Storefront Links</h2>
+                <span class="text-xs text-slate-500">Deterministic sandbox routes for automation</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Card 1: Refund Policy -->
+                <a href="/refund-policy" data-route="/refund-policy" data-testid="home-card-refund-policy" class="bg-white rounded-xl p-5 border border-slate-200 hover:border-lavender-500 shadow-xs hover:shadow-md transition flex flex-col justify-between group">
+                  <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-lavender-50 text-lavender-600 flex items-center justify-center font-bold">
+                      1
+                    </div>
+                    <h3 class="font-bold text-base text-navy-900 group-hover:text-lavender-600 transition">Public Refund Policy</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                      No login required. Check the 7-day damaged product window, required evidence, and exclusions.
+                    </p>
+                  </div>
+                  <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-lavender-600">
+                    <span>Browse /refund-policy</span>
+                    <span>→</span>
+                  </span>
+                </a>
+
+                <!-- Card 2: Sandbox Sign In -->
+                <a href="/login" data-route="/login" data-testid="home-card-login" class="bg-white rounded-xl p-5 border border-slate-200 hover:border-lavender-500 shadow-xs hover:shadow-md transition flex flex-col justify-between group">
+                  <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-lavender-50 text-lavender-600 flex items-center justify-center font-bold">
+                      2
+                    </div>
+                    <h3 class="font-bold text-base text-navy-900 group-hover:text-lavender-600 transition">Customer Sign In</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                      Sign in deterministically with <code class="font-mono">demo.customer@demomart.test</code> to view orders.
+                    </p>
+                  </div>
+                  <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-lavender-600">
+                    <span>Open /login</span>
+                    <span>→</span>
+                  </span>
+                </a>
+
+                <!-- Card 3: Refund Request Form -->
+                <a href="/refund-request" data-route="/refund-request" data-testid="home-card-refund-request" class="bg-white rounded-xl p-5 border border-slate-200 hover:border-lavender-500 shadow-xs hover:shadow-md transition flex flex-col justify-between group">
+                  <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-lavender-50 text-lavender-600 flex items-center justify-center font-bold">
+                      3
+                    </div>
+                    <h3 class="font-bold text-base text-navy-900 group-hover:text-lavender-600 transition">Multi-Step Refund Form</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                      Verify order <code class="font-mono">QA-ORDER-2026-1001</code>, supply ClaimBack evidence, and confirm consent.
+                    </p>
+                  </div>
+                  <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-lavender-600">
+                    <span>Open /refund-request</span>
+                    <span>→</span>
+                  </span>
+                </a>
+
+                <!-- Card 4: Submitted Requests & Audit Trail -->
+                <a href="/requests" data-route="/requests" data-testid="home-card-requests" class="bg-white rounded-xl p-5 border border-slate-200 hover:border-lavender-500 shadow-xs hover:shadow-md transition flex flex-col justify-between group">
+                  <div class="space-y-2">
+                    <div class="w-9 h-9 rounded-lg bg-lavender-50 text-lavender-600 flex items-center justify-center font-bold">
+                      4
+                    </div>
+                    <h3 class="font-bold text-base text-navy-900 group-hover:text-lavender-600 transition">My Requests &amp; Audit Log</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                      Inspect submitted sandbox claims, review status timelines, and verify recorded customer consent.
+                    </p>
+                  </div>
+                  <span class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-lavender-600">
+                    <span>View /requests</span>
+                    <span>→</span>
+                  </span>
+                </a>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      // 2. REFUND POLICY PAGE (/refund-policy) — Public, no login required
+      function renderRefundPolicyView() {
+        return `
+          <article data-testid="page-refund-policy" class="max-w-4xl mx-auto space-y-8">
+            <!-- Header Banner -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="space-y-1.5">
+                <div class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-lavender-600 font-semibold">
+                  <span>Public Policy Document</span>
+                  <span>•</span>
+                  <span>No Login Required</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-navy-900">DemoMart India — Refund &amp; Replacement Policy</h1>
+                <p class="text-sm text-slate-600">Effective for all DemoMart India electronics &amp; accessories orders (Sandbox Policy v2026.10)</p>
+              </div>
+              <div class="shrink-0">
+                <a
+                  href="/refund-request"
+                  data-route="/refund-request"
+                  id="start-refund-request-btn"
+                  data-testid="start-refund-request-btn"
+                  class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm shadow-sm transition"
+                >
+                  <span>Start a refund request</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- Highlighted Key Eligibility Summary Section -->
+            <section
+              id="policy-eligibility-summary"
+              data-testid="policy-eligibility-summary"
+              class="bg-lavender-50 border-2 border-lavender-200 rounded-2xl p-6 sm:p-8 space-y-4"
+            >
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <h2 class="text-lg sm:text-xl font-bold text-navy-900 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-lavender-600" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>Key eligibility summary</span>
+                </h2>
+                <span class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-white text-lavender-700 border border-lavender-200">
+                  Policy Rule Reference: DM-POL-7D
+                </span>
+              </div>
+
+              <p class="text-sm font-semibold text-lavender-950 bg-white/80 p-3.5 rounded-xl border border-lavender-200" data-testid="policy-core-rule">
+                Damaged product claims may be raised within 7 days of delivery.
+              </p>
+
+              <ul class="space-y-2.5 text-sm text-navy-900 list-disc pl-5">
+                <li><strong>7-Day Eligibility Window:</strong> Refund requests for damaged products are allowed within <strong>7 days of delivery</strong>.</li>
+                <li><strong>Required Claim Information:</strong> Customer must provide <strong>order ID, reason, and supporting evidence</strong>.</li>
+                <li><strong>Processing &amp; SLA:</strong> Refunds are reviewed within <strong>3–5 business days</strong> after submission.</li>
+                <li><strong>Exclusions:</strong> Products damaged due to <strong>customer misuse are excluded</strong> from refund coverage.</li>
+                <li><strong>Verification Evidence:</strong> The merchant may request <strong>photos or receipt evidence</strong> to validate the claim.</li>
+              </ul>
+            </section>
+
+            <!-- Detailed Policy Sections -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6 text-sm text-slate-700 leading-relaxed">
+              <section class="space-y-2">
+                <h2 class="text-lg font-bold text-navy-900">1. Damaged or Defective Delivery Coverage</h2>
+                <p>
+                  If an item purchased from DemoMart India arrives with physical damage, cracked housing, or hardware charging failure out of the box, customers may submit a refund request within <strong>7 calendar days of the recorded delivery date</strong>.
+                </p>
+                <ul class="list-disc pl-5 space-y-1">
+                  <li>Refund requests for damaged products are allowed within 7 days of delivery.</li>
+                  <li>Items delivered more than 7 days prior to the request date are redirected to standard manufacturer warranty service.</li>
+                </ul>
+              </section>
+
+              <section class="space-y-2 border-t border-slate-100 pt-6">
+                <h2 class="text-lg font-bold text-navy-900">2. Mandatory Claim Documentation &amp; Evidence</h2>
+                <p>
+                  To ensure fast and accurate processing by our support team (or automated ClaimBack intake), every submission must include:
+                </p>
+                <ul class="list-disc pl-5 space-y-1">
+                  <li>Customer must provide <strong>order ID, reason, and supporting evidence</strong>.</li>
+                  <li>A clear written description of the defect (for example: <em>"The right earbud arrived cracked and does not charge."</em>).</li>
+                  <li>The merchant may request <strong>photos or receipt evidence</strong> (such as an invoice summary or verified QA receipt).</li>
+                </ul>
+              </section>
+
+              <section class="space-y-2 border-t border-slate-100 pt-6">
+                <h2 class="text-lg font-bold text-navy-900">3. Exclusions &amp; Non-Refundable Scenarios</h2>
+                <ul class="list-disc pl-5 space-y-1">
+                  <li><strong>Products damaged due to customer misuse are excluded.</strong> Accidental drops after delivery, liquid spills, or unauthorized modifications are not covered.</li>
+                  <li>Unverified order IDs or requests submitted without explicit customer confirmation cannot be processed.</li>
+                </ul>
+              </section>
+
+              <section class="space-y-2 border-t border-slate-100 pt-6">
+                <h2 class="text-lg font-bold text-navy-900">4. Review Timeline &amp; Sandbox Notice</h2>
+                <ul class="list-disc pl-5 space-y-1">
+                  <li><strong>Refunds are reviewed within 3–5 business days.</strong></li>
+                  <li>Upon submission, your request receives an initial status of <code class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">Received for review</code> and a full audit log is generated under <strong>My Requests</strong>.</li>
+                </ul>
+              </section>
+
+              <div class="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <p class="text-xs text-slate-500">Ready to file a sandbox refund claim for Order <code class="font-mono font-semibold text-navy-900">QA-ORDER-2026-1001</code>?</p>
+                <a
+                  href="/refund-request"
+                  data-route="/refund-request"
+                  data-testid="policy-bottom-start-refund-btn"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm transition"
+                >
+                  <span>Start a refund request</span>
+                  <span>→</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      // 3. SANDBOX LOGIN PAGE (/login)
+      function renderLoginView() {
+        const customUsers = Array.isArray(appState.users) ? appState.users : [];
+
+        return `
+          <div data-testid="page-login" class="max-w-md mx-auto space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+              <div class="space-y-1.5">
+                <span class="text-xs font-mono uppercase tracking-wider font-semibold text-lavender-600">Deterministic Sandbox Auth</span>
+                <h1 class="text-2xl font-extrabold text-navy-900">Sign in to DemoMart India</h1>
+                <p class="text-xs text-slate-600">
+                  Use the default QA credentials or any custom sandbox account registered in your browser.
+                </p>
+              </div>
+
+              <!-- Visible Default Sandbox Credentials Box -->
+              <div
+                data-testid="demo-credentials-box"
+                class="bg-lavender-50 border border-lavender-200 rounded-xl p-4 space-y-2.5 text-xs"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-navy-900 uppercase tracking-wider text-[11px]">Default QA Credentials</span>
+                  <button
+                    type="button"
+                    id="fill-demo-credentials-btn"
+                    data-testid="fill-demo-credentials-btn"
+                    onclick="window.DemoMartApp.fillDemoCredentials()"
+                    class="px-2.5 py-1 rounded bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-[11px] transition"
+                  >
+                    Auto-Fill Default
+                  </button>
+                </div>
+                <div class="space-y-1 font-mono text-navy-900">
+                  <div><span class="text-slate-500 font-sans">Email:</span> <strong id="demo-credential-email">demo.customer@demomart.test</strong></div>
+                  <div><span class="text-slate-500 font-sans">Password:</span> <strong id="demo-credential-password">DemoPass123!</strong></div>
+                </div>
+              </div>
+
+              <!-- Custom Registered Sandbox Accounts List (if any exist in localStorage) -->
+              ${customUsers.length > 0 ? `
+                <div data-testid="custom-accounts-list" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5 text-xs">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-navy-900 uppercase tracking-wider text-[11px]">Registered Sandbox Accounts (${customUsers.length})</span>
+                    <span class="text-[10px] font-mono text-slate-500">localStorage</span>
+                  </div>
+                  <div class="space-y-2 max-h-36 overflow-y-auto">
+                    ${customUsers.map((u, idx) => `
+                      <div class="flex items-center justify-between gap-2 bg-white p-2.5 rounded-lg border border-slate-200">
+                        <div class="truncate">
+                          <div class="font-semibold text-navy-900 truncate">${escapeHtml(u.name)}</div>
+                          <div class="font-mono text-[11px] text-slate-500 truncate">${escapeHtml(u.email)}</div>
+                        </div>
+                        <button
+                          type="button"
+                          data-testid="fill-custom-user-${idx}"
+                          onclick="window.DemoMartApp.fillCustomUserCredentials(${idx})"
+                          class="px-2.5 py-1 rounded bg-navy-900 hover:bg-navy-800 text-white font-semibold text-[11px] shrink-0 transition"
+                        >
+                          Fill
+                        </button>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Error Message Box -->
+              <div id="login-error-box" data-testid="login-error-box" class="hidden p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"></div>
+
+              <!-- Login Form -->
+              <form id="login-form" data-testid="login-form" onsubmit="window.DemoMartApp.handleLoginSubmit(event)" class="space-y-4" novalidate>
+                <div>
+                  <label for="login-email" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Customer Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="login-email"
+                    name="email"
+                    data-testid="login-email"
+                    placeholder="demo.customer@demomart.test"
+                    autocomplete="username"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label for="login-password" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Sandbox Password
+                  </label>
+                  <input
+                    type="password"
+                    id="login-password"
+                    name="password"
+                    data-testid="login-password"
+                    placeholder="DemoPass123!"
+                    autocomplete="current-password"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  id="login-submit"
+                  data-testid="login-submit"
+                  class="w-full py-3 px-4 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm transition shadow-sm"
+                >
+                  Sign in to Sandbox Account
+                </button>
+              </form>
+
+              <!-- Link to /signup -->
+              <div class="pt-4 border-t border-slate-200 text-center text-xs text-slate-600">
+                <span>New to DemoMart Sandbox?</span>
+                <a
+                  href="/signup"
+                  data-route="/signup"
+                  id="go-to-signup"
+                  data-testid="go-to-signup"
+                  class="ml-1 font-semibold text-lavender-600 hover:text-lavender-800 underline"
+                >
+                  Create a test account
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3B. SANDBOX SIGN UP PAGE (/signup)
+      function renderSignupView() {
+        return `
+          <div data-testid="page-signup" class="max-w-md mx-auto space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+              <div class="space-y-1.5">
+                <span class="text-xs font-mono uppercase tracking-wider font-semibold text-lavender-600">New Sandbox Customer</span>
+                <h1 class="text-2xl font-extrabold text-navy-900">Create Sandbox Account</h1>
+                <p class="text-xs text-slate-600">
+                  Register a local test account. Sample order <code class="font-mono font-semibold text-navy-900">QA-ORDER-2026-1001</code> will be automatically provisioned for your account.
+                </p>
+              </div>
+
+              <!-- Sandbox Notice Banner -->
+              <div
+                data-testid="signup-sandbox-notice"
+                class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start justify-between gap-3"
+              >
+                <div>
+                  <strong class="block font-bold">Sandbox Registration Only — Credentials are stored locally in your browser.</strong>
+                  <span class="text-[11px] text-amber-800">Saved in <code class="font-mono">localStorage</code> (<code class="font-mono">demomart_users_v1</code>).</span>
+                </div>
+                <button
+                  type="button"
+                  id="fill-sample-signup"
+                  data-testid="fill-sample-signup"
+                  onclick="window.DemoMartApp.fillSampleSignup()"
+                  class="px-2.5 py-1.5 rounded-lg bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-[11px] shrink-0 transition"
+                >
+                  Auto-fill New Test Customer
+                </button>
+              </div>
+
+              <!-- Error Message Box -->
+              <div id="signup-error-box" data-testid="signup-error-box" class="hidden p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"></div>
+
+              <!-- Sign Up Form -->
+              <form id="signup-form" data-testid="signup-form" onsubmit="window.DemoMartApp.handleSignupSubmit(event)" class="space-y-4" novalidate>
+                <div>
+                  <label for="signup-name" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Full Name <span class="text-rose-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="signup-name"
+                    name="name"
+                    data-testid="signup-name"
+                    placeholder="Aarav Sharma (QA Tester)"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label for="signup-email" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Email Address <span class="text-rose-600">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="signup-email"
+                    name="email"
+                    data-testid="signup-email"
+                    placeholder="aarav.qa@demomart.test"
+                    autocomplete="username"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label for="signup-password" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Password <span class="text-rose-600">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="signup-password"
+                    name="password"
+                    data-testid="signup-password"
+                    placeholder="Create a sandbox password"
+                    autocomplete="new-password"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label for="signup-confirm-password" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Confirm Password <span class="text-rose-600">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    id="signup-confirm-password"
+                    name="confirmPassword"
+                    data-testid="signup-confirm-password"
+                    placeholder="Confirm sandbox password"
+                    autocomplete="new-password"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  id="signup-submit"
+                  data-testid="signup-submit"
+                  class="w-full py-3 px-4 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm transition shadow-sm"
+                >
+                  Create Sandbox Account
+                </button>
+              </form>
+
+              <div class="pt-4 border-t border-slate-200 text-center text-xs text-slate-600">
+                <span>Already have a sandbox account?</span>
+                <a
+                  href="/login"
+                  data-route="/login"
+                  data-testid="go-to-login"
+                  class="ml-1 font-semibold text-lavender-600 hover:text-lavender-800 underline"
+                >
+                  Sign in here
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Guard helper for protected routes (/orders, /requests)
+      function renderAuthRequiredPrompt(intendedRoute) {
+        appState.postLoginRedirect = intendedRoute;
+        return `
+          <div data-testid="auth-required-card" class="max-w-lg mx-auto bg-white rounded-2xl p-8 border border-slate-200 shadow-xs text-center space-y-5">
+            <div class="w-12 h-12 rounded-2xl bg-lavender-50 text-lavender-600 mx-auto flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div class="space-y-1.5">
+              <h1 class="text-xl font-bold text-navy-900">Sandbox Sign-In Required</h1>
+              <p class="text-sm text-slate-600">
+                Please sign in with the DemoMart sandbox customer account (<code class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">demo.customer@demomart.test</code>) or create a new test account to view <code class="font-mono text-xs">${escapeHtml(intendedRoute)}</code>.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/login"
+                data-route="/login"
+                data-testid="prompt-go-to-login-btn"
+                class="px-5 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm transition"
+              >
+                Go to Sandbox Login
+              </a>
+              <a
+                href="/signup"
+                data-route="/signup"
+                data-testid="prompt-go-to-signup-btn"
+                class="px-4 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm transition"
+              >
+                Create Test Account
+              </a>
+              <button
+                type="button"
+                data-testid="prompt-instant-demo-login-btn"
+                onclick="window.DemoMartApp.instantSandboxLogin('${escapeHtml(intendedRoute)}')"
+                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-sm transition"
+              >
+                1-Click Demo Sign In
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // 4. ORDERS PAGE (/orders) — Requires sandbox login
+      function renderOrdersView() {
+        if (!appState.auth.isLoggedIn) {
+          return renderAuthRequiredPrompt('/orders');
+        }
+
+        const activeOrder = getActiveOrder();
+
+        return `
+          <div data-testid="page-orders" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="text-xs font-mono uppercase tracking-wider text-lavender-600 font-semibold">Customer Account • ${escapeHtml(activeOrder.customer)} (${escapeHtml(activeOrder.customerEmail)})</span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-navy-900">Your Orders</h1>
+              </div>
+              <a
+                href="/refund-policy"
+                data-route="/refund-policy"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-lavender-600 hover:text-lavender-700"
+              >
+                <span>View 7-Day Refund Policy</span>
+                <span>→</span>
+              </a>
+            </div>
+
+            <!-- Sample Order Card (QA-ORDER-2026-1001) -->
+            <div
+              id="order-row-QA-ORDER-2026-1001"
+              data-testid="order-row-QA-ORDER-2026-1001"
+              class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden"
+            >
+              <!-- Order Top Metadata Bar -->
+              <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
+                <div>
+                  <span class="text-slate-500 block">Order ID</span>
+                  <code data-testid="order-id-value" class="font-mono font-bold text-navy-900 text-sm">${activeOrder.orderId}</code>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Customer</span>
+                  <span data-testid="order-customer-value" class="font-semibold text-navy-900">${escapeHtml(activeOrder.customer)}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Purchase date</span>
+                  <span data-testid="order-purchase-date" class="font-semibold text-navy-900 tabular-nums">${activeOrder.purchaseDate}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Delivery date</span>
+                  <span data-testid="order-delivery-date" class="font-semibold text-navy-900 tabular-nums">${activeOrder.deliveryDate}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Total Amount</span>
+                  <span data-testid="order-amount-value" class="font-bold text-navy-900 text-sm tabular-nums">${activeOrder.amountFormatted}</span>
+                </div>
+              </div>
+
+              <!-- Error Message Box -->
+              <div id="login-error-box" data-testid="login-error-box" class="hidden p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"></div>
+
+              <!-- Login Form -->
+              <form id="login-form" data-testid="login-form" onsubmit="window.DemoMartApp.handleLoginSubmit(event)" class="space-y-4" novalidate>
+                <div>
+                  <label for="login-email" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Customer Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="login-email"
+                    name="email"
+                    data-testid="login-email"
+                    placeholder="demo.customer@demomart.test"
+                    autocomplete="username"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label for="login-password" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                    Sandbox Password
+                  </label>
+                  <input
+                    type="password"
+                    id="login-password"
+                    name="password"
+                    data-testid="login-password"
+                    placeholder="DemoPass123!"
+                    autocomplete="current-password"
+                    required
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  id="login-submit"
+                  data-testid="login-submit"
+                  class="w-full py-3 px-4 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm transition shadow-sm"
+                >
+                  Sign in to Sandbox Account
+                </button>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+
+      // Guard helper for protected routes (/orders, /requests)
+      function renderAuthRequiredPrompt(intendedRoute) {
+        appState.postLoginRedirect = intendedRoute;
+        return `
+          <div data-testid="auth-required-card" class="max-w-lg mx-auto bg-white rounded-2xl p-8 border border-slate-200 shadow-xs text-center space-y-5">
+            <div class="w-12 h-12 rounded-2xl bg-lavender-50 text-lavender-600 mx-auto flex items-center justify-center">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div class="space-y-1.5">
+              <h1 class="text-xl font-bold text-navy-900">Sandbox Sign-In Required</h1>
+              <p class="text-sm text-slate-600">
+                Please sign in with the DemoMart sandbox customer account (<code class="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">demo.customer@demomart.test</code>) to view <code class="font-mono text-xs">${escapeHtml(intendedRoute)}</code>.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="/login"
+                data-route="/login"
+                data-testid="prompt-go-to-login-btn"
+                class="px-5 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm transition"
+              >
+                Go to Sandbox Login
+              </a>
+              <button
+                type="button"
+                data-testid="prompt-instant-demo-login-btn"
+                onclick="window.DemoMartApp.instantSandboxLogin('${escapeHtml(intendedRoute)}')"
+                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-sm transition"
+              >
+                1-Click Demo Sign In
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // 4. ORDERS PAGE (/orders) — Requires sandbox login
+      function renderOrdersView() {
+        if (!appState.auth.isLoggedIn) {
+          return renderAuthRequiredPrompt('/orders');
+        }
+
+        return `
+          <div data-testid="page-orders" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="text-xs font-mono uppercase tracking-wider text-lavender-600 font-semibold">Customer Account • ${escapeHtml(SAMPLE_ORDER.customer)}</span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-navy-900">Your Orders</h1>
+              </div>
+              <a
+                href="/refund-policy"
+                data-route="/refund-policy"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-lavender-600 hover:text-lavender-700"
+              >
+                <span>View 7-Day Refund Policy</span>
+                <span>→</span>
+              </a>
+            </div>
+
+            <!-- Sample Order Card (QA-ORDER-2026-1001) -->
+            <div
+              id="order-row-QA-ORDER-2026-1001"
+              data-testid="order-row-QA-ORDER-2026-1001"
+              class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden"
+            >
+              <!-- Order Top Metadata Bar -->
+              <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
+                <div>
+                  <span class="text-slate-500 block">Order ID</span>
+                  <code data-testid="order-id-value" class="font-mono font-bold text-navy-900 text-sm">${SAMPLE_ORDER.orderId}</code>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Customer</span>
+                  <span data-testid="order-customer-value" class="font-semibold text-navy-900">${SAMPLE_ORDER.customer}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Purchase date</span>
+                  <span data-testid="order-purchase-date" class="font-semibold text-navy-900 tabular-nums">${SAMPLE_ORDER.purchaseDate}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Delivery date</span>
+                  <span data-testid="order-delivery-date" class="font-semibold text-navy-900 tabular-nums">${SAMPLE_ORDER.deliveryDate}</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block">Total Amount</span>
+                  <span data-testid="order-amount-value" class="font-bold text-navy-900 text-sm tabular-nums">${SAMPLE_ORDER.amountFormatted}</span>
+                </div>
+              </div>
+
+              <!-- Order Main Content -->
+              <div class="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="flex items-start sm:items-center gap-4">
+                  <!-- Earbuds SVG Placeholder -->
+                  <div class="w-20 h-20 rounded-xl bg-lavender-50 border border-lavender-200 flex items-center justify-center shrink-0">
+                    <svg class="w-10 h-10 text-lavender-600" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                    </svg>
+                  </div>
+                  <div class="space-y-1.5">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span
+                        data-testid="order-status-badge"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-limebrand-100 text-limebrand-700 border border-limebrand-500/30"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-limebrand-600"></span>
+                        <span>${SAMPLE_ORDER.status}</span>
+                      </span>
+                      <span class="text-xs text-slate-500">Delivered on ${SAMPLE_ORDER.deliveryDate}</span>
+                    </div>
+                    <h2 data-testid="order-item-name" class="text-lg font-bold text-navy-900">${SAMPLE_ORDER.item}</h2>
+                    <p class="text-xs text-slate-600">
+                      Eligible for damaged-product refund within 7 days of delivery.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                  <a
+                    href="/orders/QA-ORDER-2026-1001"
+                    data-route="/orders/QA-ORDER-2026-1001"
+                    id="view-order-btn"
+                    data-testid="view-order-btn"
+                    class="flex-1 md:flex-initial inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-sm transition"
+                  >
+                    View order
+                  </a>
+                  <button
+                    type="button"
+                    id="request-refund-btn"
+                    data-testid="request-refund-btn"
+                    onclick="window.DemoMartApp.startRefundForOrder('QA-ORDER-2026-1001')"
+                    class="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm transition shadow-xs"
+                  >
+                    <span>Request refund</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 5. ORDER DETAIL PAGE (/orders/QA-ORDER-2026-1001)
+      function renderOrderDetailView() {
+        const activeOrder = getActiveOrder();
+        return `
+          <div data-testid="page-order-detail" class="space-y-6">
+            <!-- Breadcrumb -->
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <a href="/orders" data-route="/orders" data-testid="back-to-orders-link" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-navy-900">
+                <span>← Back to Orders</span>
+              </a>
+              <span class="text-xs font-mono text-slate-500">Order Reference: <strong class="text-navy-900">${activeOrder.orderId}</strong></span>
+            </div>
+
+            <!-- Main Order Detail Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div class="bg-navy-900 text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-limebrand-500/20 text-limebrand-100 border border-limebrand-400/40">
+                      ${activeOrder.status}
+                    </span>
+                    <code class="text-xs font-mono text-lavender-200">${activeOrder.orderId}</code>
+                  </div>
+                  <h1 class="text-2xl font-extrabold">${activeOrder.item}</h1>
+                  <p class="text-xs text-slate-300">Purchased on ${activeOrder.purchaseDate} • Delivered on ${activeOrder.deliveryDate}</p>
+                </div>
+                <div class="shrink-0">
+                  <button
+                    type="button"
+                    id="order-detail-request-refund-btn"
+                    data-testid="order-detail-request-refund-btn"
+                    onclick="window.DemoMartApp.startRefundForOrder('QA-ORDER-2026-1001')"
+                    class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-lavender-600 hover:bg-lavender-500 text-white font-semibold text-sm shadow-md transition"
+                  >
+                    <span>Request a refund</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left 7 cols: Item visual + Eligibility Hint -->
+                <div class="lg:col-span-7 space-y-6">
+                  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <!-- Item SVG Illustration Placeholder -->
+                    <div data-testid="order-item-image-placeholder" class="w-28 h-28 rounded-xl bg-white border border-slate-200 flex flex-col items-center justify-center shrink-0 p-3 text-center">
+                      <svg class="w-12 h-12 text-lavender-600" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                      </svg>
+                      <span class="text-[10px] font-mono text-slate-400 mt-1">SKU: ${activeOrder.sku}</span>
+                    </div>
+                    <div class="space-y-1.5 text-sm">
+                      <h2 class="font-bold text-base text-navy-900">${activeOrder.item}</h2>
+                      <p class="text-xs text-slate-600">True Wireless Stereo (TWS) • USB-C Fast Charging Case • Matte Midnight Navy</p>
+                      <div class="pt-1 flex flex-wrap gap-3 text-xs">
+                        <span><strong>Customer:</strong> ${escapeHtml(activeOrder.customer)}</span>
+                        <span><strong>Quantity:</strong> 1 Unit</span>
+                        <span><strong>Amount:</strong> <strong class="tabular-nums">${activeOrder.amountFormatted}</strong> (INR)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Prominent Refund Eligibility Hint -->
+                  <div
+                    data-testid="order-refund-eligibility-hint"
+                    class="bg-lavender-50 border border-lavender-200 rounded-xl p-5 space-y-2"
+                  >
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-bold uppercase tracking-wider text-lavender-700">Refund Eligibility Hint</span>
+                      <a href="/refund-policy" data-route="/refund-policy" class="text-xs font-semibold text-lavender-600 underline">Full Policy</a>
+                    </div>
+                    <p class="text-sm font-semibold text-navy-900">
+                      ${SAMPLE_ORDER.eligibilityHint}
+                    </p>
+                    <p class="text-xs text-slate-600">
+                      Order <code class="font-mono">${SAMPLE_ORDER.orderId}</code> was delivered on <strong>${SAMPLE_ORDER.deliveryDate}</strong>. To submit a claim, provide the order ID, issue reason, and supporting evidence summary.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Right 5 cols: Invoice Summary -->
+                <div class="lg:col-span-5">
+                  <div data-testid="order-invoice-summary" class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4 text-xs">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                      <h3 class="font-bold text-sm text-navy-900">Invoice Summary (Sandbox)</h3>
+                      <span class="font-mono text-slate-500">INV-2026-1001</span>
+                    </div>
+                    <div class="space-y-2">
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Merchant:</span>
+                        <span class="font-semibold text-navy-900">DemoMart India</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Order ID:</span>
+                        <code class="font-mono font-semibold text-navy-900">${SAMPLE_ORDER.orderId}</code>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Purchase Date:</span>
+                        <span class="tabular-nums text-navy-900">${SAMPLE_ORDER.purchaseDate}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Delivery Date:</span>
+                        <span class="tabular-nums text-navy-900">${SAMPLE_ORDER.deliveryDate}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">Item Subtotal:</span>
+                        <span class="tabular-nums text-navy-900">₹1,100.85</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="text-slate-500">GST (18% Included):</span>
+                        <span class="tabular-nums text-navy-900">₹198.15</span>
+                      </div>
+                      <div class="flex justify-between pt-2 border-t border-slate-200 text-sm font-bold text-navy-900">
+                        <span>Total Paid (INR):</span>
+                        <span data-testid="invoice-total-amount" class="tabular-nums">${SAMPLE_ORDER.amountFormatted}</span>
+                      </div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 text-[11px] text-slate-500 space-y-1">
+                      <div><strong>Delivery Address:</strong> ${SAMPLE_ORDER.shippingAddress}</div>
+                      <div><strong>Payment Method:</strong> ${SAMPLE_ORDER.paymentMethod}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 6. MULTI-STEP REFUND REQUEST PAGE (/refund-request) — Key Test Page
+      function renderRefundRequestView() {
+        const d = appState.draftForm;
+        const step = d.step || 1;
+
+        return `
+          <div data-testid="page-refund-request" class="max-w-3xl mx-auto space-y-6">
+            <!-- Page Header & ClaimBack Helper Toolbar -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="space-y-1">
+                <span class="text-xs font-mono uppercase tracking-wider text-lavender-600 font-semibold">DemoMart India • Sandbox Claim Intake</span>
+                <h1 class="text-2xl font-extrabold text-navy-900">Submit a Refund Request</h1>
+                <p class="text-xs text-slate-600">Complete the 3 steps below. All field values persist as you move between steps.</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  id="autofill-claimback-packet-btn"
+                  data-testid="autofill-claimback-packet-btn"
+                  onclick="window.DemoMartApp.autoFillClaimBackPacket()"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-lavender-50 hover:bg-lavender-100 text-lavender-700 border border-lavender-200 text-xs font-semibold transition"
+                  title="Pre-fill form with the official ClaimBack QA claim packet"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  <span>Auto-fill ClaimBack QA Packet</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive 3-Step Progress Stepper -->
+            <nav aria-label="Refund Form Steps" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                data-testid="stepper-btn-1"
+                onclick="window.DemoMartApp.goToRefundStep(1)"
+                class="flex items-center gap-2.5 p-2.5 rounded-xl text-left transition ${step === 1 ? 'bg-navy-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}"
+              >
+                <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${step === 1 ? 'bg-lavender-600 text-white' : d.orderVerified ? 'bg-limebrand-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                  1
+                </span>
+                <div class="truncate">
+                  <div class="text-[10px] uppercase tracking-wider opacity-75">Step 1</div>
+                  <div class="text-xs font-bold truncate">Verify order</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                data-testid="stepper-btn-2"
+                onclick="window.DemoMartApp.goToRefundStep(2)"
+                class="flex items-center gap-2.5 p-2.5 rounded-xl text-left transition ${step === 2 ? 'bg-navy-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}"
+              >
+                <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${step === 2 ? 'bg-lavender-600 text-white' : (d.reason && d.description) ? 'bg-limebrand-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                  2
+                </span>
+                <div class="truncate">
+                  <div class="text-[10px] uppercase tracking-wider opacity-75">Step 2</div>
+                  <div class="text-xs font-bold truncate">Refund details</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                data-testid="stepper-btn-3"
+                onclick="window.DemoMartApp.goToRefundStep(3)"
+                class="flex items-center gap-2.5 p-2.5 rounded-xl text-left transition ${step === 3 ? 'bg-navy-900 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}"
+              >
+                <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 ${step === 3 ? 'bg-lavender-600 text-white' : 'bg-slate-200 text-slate-700'}">
+                  3
+                </span>
+                <div class="truncate">
+                  <div class="text-[10px] uppercase tracking-wider opacity-75">Step 3</div>
+                  <div class="text-xs font-bold truncate">Review request</div>
+                </div>
+              </button>
+            </nav>
+
+            <!-- Inline Validation Banner -->
+            ${d.validationError ? `
+              <div id="refund-validation-error" data-testid="refund-validation-error" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium flex items-center justify-between">
+                <span>${escapeHtml(d.validationError)}</span>
+                <button type="button" onclick="window.DemoMartApp.clearValidationError()" class="text-rose-500 hover:text-rose-800 font-bold ml-4">✕</button>
+              </div>
+            ` : ''}
+
+            <!-- STEP 1: VERIFY ORDER -->
+            <section
+              id="refund-step-1"
+              data-testid="refund-step-1"
+              class="${step === 1 ? 'block' : 'hidden'} bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6"
+            >
+              <div class="space-y-1">
+                <h2 class="text-lg font-bold text-navy-900">Step 1: Verify order</h2>
+                <p class="text-xs text-slate-600">Enter your DemoMart India Order ID to verify delivery status and policy eligibility. (Sample Order ID: <code class="font-mono font-semibold text-navy-900">QA-ORDER-2026-1001</code>)</p>
+              </div>
+
+              <div class="space-y-3">
+                <label for="order-id" class="block text-xs font-semibold text-navy-900">
+                  Order ID <span class="text-rose-600">*</span>
+                </label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    id="order-id"
+                    name="order-id"
+                    data-testid="order-id"
+                    value="${escapeHtml(d.orderIdInput)}"
+                    oninput="window.DemoMartApp.updateDraftField('orderIdInput', this.value)"
+                    placeholder="QA-ORDER-2026-1001"
+                    class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 font-mono text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                  <button
+                    type="button"
+                    id="find-order-btn"
+                    data-testid="find-order-btn"
+                    onclick="window.DemoMartApp.findOrder()"
+                    class="px-6 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white font-semibold text-sm transition shrink-0"
+                  >
+                    Find order
+                  </button>
+                </div>
+              </div>
+
+              <!-- Verified Sample Order Display -->
+              ${d.orderVerified ? `
+                <div
+                  id="verified-order-summary"
+                  data-testid="verified-order-summary"
+                  class="bg-limebrand-50 border border-limebrand-500/40 rounded-xl p-5 space-y-4"
+                >
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-limebrand-600"></span>
+                      <span class="text-xs font-bold uppercase tracking-wider text-limebrand-700">Order Verified &amp; Eligible</span>
+                    </div>
+                    <code class="text-xs font-mono font-bold text-navy-900">${SAMPLE_ORDER.orderId}</code>
+                  </div>
+
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-white p-3.5 rounded-lg border border-limebrand-500/20">
+                    <div>
+                      <span class="text-slate-500 block">Item</span>
+                      <strong class="text-navy-900">${SAMPLE_ORDER.item}</strong>
+                    </div>
+                    <div>
+                      <span class="text-slate-500 block">Amount</span>
+                      <strong class="text-navy-900 tabular-nums">${SAMPLE_ORDER.amountFormatted} (INR)</strong>
+                    </div>
+                    <div>
+                      <span class="text-slate-500 block">Delivered</span>
+                      <strong class="text-navy-900 tabular-nums">${SAMPLE_ORDER.deliveryDate}</strong>
+                    </div>
+                    <div>
+                      <span class="text-slate-500 block">Policy Window</span>
+                      <strong class="text-limebrand-700">Within 7 Days</strong>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      id="step-1-continue-btn"
+                      data-testid="step-1-continue-btn"
+                      onclick="window.DemoMartApp.goToRefundStep(2)"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm transition shadow-xs"
+                    >
+                      <span>Continue to Refund Details</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              ` : `
+                <div class="text-xs text-slate-500 bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
+                  <span>Tip: Enter <code class="font-mono font-semibold text-navy-900">QA-ORDER-2026-1001</code> and click <strong>Find order</strong>.</span>
+                  <button
+                    type="button"
+                    data-testid="quick-fill-order-id-btn"
+                    onclick="window.DemoMartApp.quickFillOrderId()"
+                    class="text-lavender-600 hover:text-lavender-800 font-semibold underline"
+                  >
+                    Fill QA-ORDER-2026-1001
+                  </button>
+                </div>
+              `}
+            </section>
+
+            <!-- STEP 2: REFUND DETAILS -->
+            <section
+              id="refund-step-2"
+              data-testid="refund-step-2"
+              class="${step === 2 ? 'block' : 'hidden'} bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-5"
+            >
+              <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 class="text-lg font-bold text-navy-900">Step 2: Refund details</h2>
+                  <p class="text-xs text-slate-600">Provide the reason, defect description, refund amount, and supporting evidence for Order <code class="font-mono font-semibold text-navy-900">${escapeHtml(d.orderIdInput || SAMPLE_ORDER.orderId)}</code>.</p>
+                </div>
+                <span class="px-2.5 py-1 rounded text-xs font-mono bg-slate-100 text-slate-700">Merchant: DemoMart India</span>
+              </div>
+
+              <!-- Field 1: Reason Select (ID: refund-reason) -->
+              <div>
+                <label for="refund-reason" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                  Reason for Refund <span class="text-rose-600">*</span>
+                </label>
+                <select
+                  id="refund-reason"
+                  name="refund-reason"
+                  data-testid="refund-reason"
+                  onchange="window.DemoMartApp.updateDraftField('reason', this.value)"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                >
+                  <option value="" ${!d.reason ? 'selected' : ''}>Select a reason...</option>
+                  <option value="Product arrived damaged" ${d.reason === 'Product arrived damaged' ? 'selected' : ''}>Product arrived damaged</option>
+                  <option value="Item missing from delivery" ${d.reason === 'Item missing from delivery' ? 'selected' : ''}>Item missing from delivery</option>
+                  <option value="Wrong item received" ${d.reason === 'Wrong item received' ? 'selected' : ''}>Wrong item received</option>
+                  <option value="Quality issue" ${d.reason === 'Quality issue' ? 'selected' : ''}>Quality issue</option>
+                  <option value="Other" ${d.reason === 'Other' ? 'selected' : ''}>Other</option>
+                </select>
+              </div>
+
+              <!-- Field 2: Description Textarea (ID: refund-description) -->
+              <div>
+                <label for="refund-description" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                  Issue Description <span class="text-rose-600">*</span>
+                </label>
+                <textarea
+                  id="refund-description"
+                  name="refund-description"
+                  data-testid="refund-description"
+                  rows="3"
+                  oninput="window.DemoMartApp.updateDraftField('description', this.value)"
+                  placeholder="Describe the issue with the item (e.g., The right earbud arrived cracked and does not charge.)"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                >${escapeHtml(d.description)}</textarea>
+              </div>
+
+              <!-- Field 3: Amount Field (ID: refund-amount, default ₹1,299) -->
+              <div>
+                <label for="refund-amount" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                  Refund Amount (INR) <span class="text-rose-600">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="refund-amount"
+                    name="refund-amount"
+                    data-testid="refund-amount"
+                    value="${escapeHtml(d.amount)}"
+                    oninput="window.DemoMartApp.updateDraftField('amount', this.value)"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-mono tabular-nums focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                  />
+                  <span class="absolute right-3.5 top-2.5 text-xs font-mono text-slate-400">Currency: INR (Max ₹1,299)</span>
+                </div>
+              </div>
+
+              <!-- Field 4: Evidence Summary Textarea (ID: evidence-summary) -->
+              <div>
+                <label for="evidence-summary" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                  Supporting Evidence Summary <span class="text-rose-600">*</span>
+                </label>
+                <textarea
+                  id="evidence-summary"
+                  name="evidence-summary"
+                  data-testid="evidence-summary"
+                  rows="2"
+                  oninput="window.DemoMartApp.updateDraftField('evidenceSummary', this.value)"
+                  placeholder="Provide receipt verification or photo evidence summary (e.g., Synthetic ClaimBack QA receipt verified.)"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:border-lavender-600 focus:ring-2 focus:ring-lavender-500/20 outline-none"
+                >${escapeHtml(d.evidenceSummary)}</textarea>
+              </div>
+
+              <!-- Field 5: Optional Receipt/Evidence Upload Area (ID: receipt-upload) -->
+              <div>
+                <label for="receipt-upload" class="block text-xs font-semibold text-navy-900 mb-1.5">
+                  Optional Receipt or Photo Evidence Upload
+                </label>
+                <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <input
+                    type="file"
+                    id="receipt-upload"
+                    name="receipt-upload"
+                    data-testid="receipt-upload"
+                    accept=".pdf,.png,.jpg,.jpeg,.txt"
+                    onchange="window.DemoMartApp.handleReceiptUpload(this)"
+                    class="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-lavender-100 file:text-lavender-700 hover:file:bg-lavender-200"
+                  />
+                  <span data-testid="receipt-upload-status" class="text-xs font-mono text-slate-500">
+                    ${d.receiptFileName ? `Attached: ${escapeHtml(d.receiptFileName)}` : 'Optional (Sandbox metadata only)'}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Step 2 Navigation Buttons -->
+              <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  id="step-2-back-btn"
+                  data-testid="step-2-back-btn"
+                  onclick="window.DemoMartApp.goToRefundStep(1)"
+                  class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-sm transition"
+                >
+                  ← Back to Step 1
+                </button>
+                <button
+                  type="button"
+                  id="review-request-btn"
+                  data-testid="review-request-btn"
+                  onclick="window.DemoMartApp.proceedToReviewStep()"
+                  class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-sm transition shadow-sm"
+                >
+                  <span>Review request</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- STEP 3: REVIEW REQUEST & EXPLICIT CUSTOMER CONSENT -->
+            <section
+              id="refund-step-3"
+              data-testid="refund-step-3"
+              class="${step === 3 ? 'block' : 'hidden'} bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6"
+            >
+              <div class="space-y-1">
+                <h2 class="text-lg font-bold text-navy-900">Step 3: Review request &amp; confirm sandbox submission</h2>
+                <p class="text-xs text-slate-600">Verify all details below. Explicit customer confirmation is required before submitting this sandbox request.</p>
+              </div>
+
+              <!-- Review Card (data-testid="refund-review-card") -->
+              <div
+                id="refund-review-card"
+                data-testid="refund-review-card"
+                class="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-4 text-sm"
+              >
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <div>
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-lavender-600 font-bold">Claim Packet Summary</span>
+                    <h3 class="font-bold text-navy-900">DemoMart India — Refund Claim Review</h3>
+                  </div>
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-limebrand-100 text-limebrand-700">
+                    Policy Eligible
+                  </span>
+                </div>
+
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <dt class="text-slate-500">Order ID</dt>
+                    <dd data-testid="review-order-id" class="font-mono font-bold text-navy-900 text-sm mt-0.5">${escapeHtml(d.orderIdInput || SAMPLE_ORDER.orderId)}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Item</dt>
+                    <dd data-testid="review-item" class="font-semibold text-navy-900 text-sm mt-0.5">${SAMPLE_ORDER.item}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Reason</dt>
+                    <dd data-testid="review-reason" class="font-semibold text-navy-900 mt-0.5">${escapeHtml(d.reason || 'Not specified')}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-500">Refund Amount</dt>
+                    <dd data-testid="review-amount" class="font-mono font-bold text-navy-900 text-sm tabular-nums mt-0.5">${escapeHtml(formatDisplayAmount(d.amount))} (INR)</dd>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <dt class="text-slate-500">Description</dt>
+                    <dd data-testid="review-description" class="font-medium text-navy-900 bg-white p-2.5 rounded-lg border border-slate-200 mt-1">${escapeHtml(d.description || 'Not specified')}</dd>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <dt class="text-slate-500">Evidence Summary</dt>
+                    <dd data-testid="review-evidence-summary" class="font-medium text-navy-900 bg-white p-2.5 rounded-lg border border-slate-200 mt-1">${escapeHtml(d.evidenceSummary || 'Not specified')}</dd>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <dt class="text-slate-500">Policy Eligibility Note</dt>
+                    <dd data-testid="review-policy-note" class="font-semibold text-lavender-700 bg-lavender-50 p-2.5 rounded-lg border border-lavender-200 mt-1">
+                      Damaged product claims may be raised within 7 days of delivery.
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <!-- Required Clear Sandbox Warning -->
+              <div
+                id="sandbox-warning-banner"
+                data-testid="sandbox-warning-banner"
+                class="p-4 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex items-center gap-3"
+              >
+                <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <p class="text-sm font-bold">
+                  This is a sandbox request. No money will be refunded.
+                </p>
+              </div>
+
+              <!-- Required Explicit Customer Consent Checkbox (ID: customer-consent) -->
+              <div class="p-4 rounded-xl bg-lavender-50/70 border border-lavender-200">
+                <label for="customer-consent" class="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="customer-consent"
+                    name="customer-consent"
+                    data-testid="customer-consent"
+                    ${d.consentChecked ? 'checked' : ''}
+                    onchange="window.DemoMartApp.toggleConsentCheckbox(this.checked)"
+                    class="mt-0.5 w-5 h-5 rounded border-slate-300 text-lavender-600 focus:ring-lavender-500"
+                  />
+                  <span class="text-sm font-semibold text-navy-900">
+                    I confirm that I want to submit this sandbox refund request.
+                  </span>
+                </label>
+              </div>
+
+              <!-- Step 3 Action Buttons (Submit disabled until consent checked) -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                <button
+                  type="button"
+                  id="step-3-back-btn"
+                  data-testid="step-3-back-btn"
+                  onclick="window.DemoMartApp.goToRefundStep(2)"
+                  class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-sm transition"
+                >
+                  ← Edit Refund Details
+                </button>
+
+                <button
+                  type="button"
+                  id="submit-refund-request"
+                  data-testid="submit-refund-request"
+                  ${d.consentChecked ? '' : 'disabled'}
+                  onclick="window.DemoMartApp.submitSandboxRefundRequest()"
+                  class="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition shadow-sm ${
+                    d.consentChecked
+                      ? 'bg-limebrand-600 hover:bg-limebrand-700 text-white cursor-pointer'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }"
+                >
+                  Submit sandbox refund request
+                </button>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      // 7. SUBMITTED REQUESTS LIST PAGE (/requests) — Requires sandbox login
+      function renderRequestsListView() {
+        if (!appState.auth.isLoggedIn) {
+          return renderAuthRequiredPrompt('/requests');
+        }
+
+        const requests = appState.requests;
+
+        return `
+          <div data-testid="page-requests" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="text-xs font-mono uppercase tracking-wider text-lavender-600 font-semibold">Sandbox Audit Portal</span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-navy-900">My Refund Requests</h1>
+              </div>
+              <a
+                href="/refund-request"
+                data-route="/refund-request"
+                data-testid="new-refund-request-btn"
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white font-semibold text-xs sm:text-sm transition"
+              >
+                <span>+ New Sandbox Refund Request</span>
+              </a>
+            </div>
+
+            ${requests.length === 0 ? `
+              <div data-testid="empty-requests-state" class="bg-white rounded-2xl p-10 border border-slate-200 text-center space-y-4">
+                <p class="text-base font-bold text-navy-900">No sandbox refund requests submitted yet.</p>
+                <p class="text-xs text-slate-600 max-w-md mx-auto">
+                  Start a refund request for sample order <code class="font-mono">QA-ORDER-2026-1001</code> to inspect the confirmation timeline and audit trail.
+                </p>
+                <a
+                  href="/refund-request"
+                  data-route="/refund-request"
+                  class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-navy-900 hover:bg-navy-800 text-white text-xs font-semibold transition"
+                >
+                  <span>Open Refund Request Form</span>
+                </a>
+              </div>
+            ` : `
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table data-testid="requests-table" class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <th class="py-3.5 px-5">Request ID</th>
+                        <th class="py-3.5 px-5">Order ID</th>
+                        <th class="py-3.5 px-5">Reason</th>
+                        <th class="py-3.5 px-5">Amount</th>
+                        <th class="py-3.5 px-5">Status</th>
+                        <th class="py-3.5 px-5">Created Time</th>
+                        <th class="py-3.5 px-5 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 text-sm">
+                      ${requests.map(req => `
+                        <tr
+                          data-testid="request-row-${escapeHtml(req.id)}"
+                          onclick="window.DemoMartApp.navigate('/requests/${escapeHtml(req.id)}')"
+                          class="request-row hover:bg-lavender-50/60 cursor-pointer transition"
+                        >
+                          <td class="py-4 px-5 font-mono font-bold text-lavender-700">${escapeHtml(req.id)}</td>
+                          <td class="py-4 px-5 font-mono text-navy-900">${escapeHtml(req.orderId)}</td>
+                          <td class="py-4 px-5 font-medium text-navy-900">${escapeHtml(req.reason)}</td>
+                          <td class="py-4 px-5 font-mono font-semibold text-navy-900 tabular-nums">${escapeHtml(req.amountDisplay)}</td>
+                          <td class="py-4 px-5">
+                            <span data-testid="request-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-limebrand-100 text-limebrand-700 border border-limebrand-500/30">
+                              <span class="w-1.5 h-1.5 rounded-full bg-limebrand-600"></span>
+                              <span>${escapeHtml(req.status)}</span>
+                            </span>
+                          </td>
+                          <td class="py-4 px-5 font-mono text-xs text-slate-600 tabular-nums">${escapeHtml(req.createdFormatted)}</td>
+                          <td class="py-4 px-5 text-right">
+                            <a
+                              href="/requests/${escapeHtml(req.id)}"
+                              data-route="/requests/${escapeHtml(req.id)}"
+                              data-testid="open-request-detail-${escapeHtml(req.id)}"
+                              class="text-xs font-semibold text-lavender-600 hover:underline"
+                            >
+                              View Audit Trail →
+                            </a>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      // 8. REQUEST DETAIL & AUDIT LOG PAGE (/requests/:id)
+      function renderRequestDetailView(requestId) {
+        const req = appState.requests.find(r => r.id === requestId) || appState.requests[0];
+
+        if (!req) {
+          return `
+            <div class="max-w-xl mx-auto bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-4">
+              <h1 class="text-xl font-bold text-navy-900">Sandbox Request Not Found (${escapeHtml(requestId)})</h1>
+              <p class="text-xs text-slate-600">No request with ID <code class="font-mono">${escapeHtml(requestId)}</code> is stored in the current sandbox session.</p>
+              <a href="/requests" data-route="/requests" data-testid="return-to-requests-link" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-navy-900 text-white text-xs font-semibold">
+                Return to My Requests
+              </a>
+            </div>
+          `;
+        }
+
+        return `
+          <div data-testid="page-request-detail" class="max-w-4xl mx-auto space-y-6">
+            <!-- Top Navigation Link -->
+            <div class="flex items-center justify-between">
+              <a
+                href="/requests"
+                data-route="/requests"
+                id="return-to-requests-link"
+                data-testid="return-to-requests-link"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-lavender-600 hover:text-lavender-800"
+              >
+                <span>← Return to My Requests</span>
+              </a>
+              <span class="text-xs font-mono text-slate-500">Audit ID: <strong class="text-navy-900">${escapeHtml(req.id)}</strong></span>
+            </div>
+
+            <!-- Submitted Confirmation Panel (data-testid="confirmation-panel") -->
+            <section
+              id="confirmation-panel"
+              data-testid="confirmation-panel"
+              class="bg-limebrand-50 border-2 border-limebrand-500/40 rounded-2xl p-6 sm:p-8 space-y-3"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-limebrand-100 text-limebrand-700 text-xs font-bold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span data-testid="detail-status-badge">${escapeHtml(req.status)}</span>
+                </div>
+                <code class="text-xs font-mono font-bold text-navy-900 bg-white px-3 py-1 rounded-lg border border-limebrand-500/30">
+                  Submitted in DemoMart sandbox only
+                </code>
+              </div>
+
+              <h1 class="text-2xl font-extrabold text-navy-900">
+                Sandbox Refund Request Confirmed (${escapeHtml(req.id)})
+              </h1>
+              <p class="text-sm text-slate-700">
+                Your sandbox refund request for Order <code class="font-mono font-bold">${escapeHtml(req.orderId)}</code> (${escapeHtml(req.item)}) has been recorded with explicit customer consent. No real money or payment method will be charged or refunded.
+              </p>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <!-- Left 5 Cols: Required 4-Stage Status Timeline -->
+              <section
+                id="request-timeline"
+                data-testid="request-timeline"
+                class="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5"
+              >
+                <h2 class="text-base font-bold text-navy-900 border-b border-slate-100 pb-3">
+                  Request Processing Timeline
+                </h2>
+
+                <ol class="space-y-5 relative before:absolute before:top-2 before:bottom-2 before:left-3 before:w-0.5 before:bg-slate-200">
+                  <li class="relative pl-9">
+                    <span class="w-6 h-6 rounded-full bg-limebrand-600 text-white flex items-center justify-center text-xs font-bold absolute left-0 top-0">✓</span>
+                    <div class="text-xs font-bold text-navy-900">Request created</div>
+                    <div class="text-[11px] text-slate-500 font-mono tabular-nums">${escapeHtml(req.createdFormatted)}</div>
+                  </li>
+                  <li class="relative pl-9">
+                    <span class="w-6 h-6 rounded-full bg-limebrand-600 text-white flex items-center justify-center text-xs font-bold absolute left-0 top-0">✓</span>
+                    <div class="text-xs font-bold text-navy-900">Evidence received</div>
+                    <div class="text-[11px] text-slate-600">${escapeHtml(req.evidenceSummary)}</div>
+                  </li>
+                  <li class="relative pl-9">
+                    <span class="w-6 h-6 rounded-full bg-limebrand-600 text-white flex items-center justify-center text-xs font-bold absolute left-0 top-0">✓</span>
+                    <div class="text-xs font-bold text-navy-900">Eligibility check completed</div>
+                    <div class="text-[11px] text-limebrand-700 font-medium">${escapeHtml(req.policyResult)}</div>
+                  </li>
+                  <li class="relative pl-9">
+                    <span class="w-6 h-6 rounded-full bg-lavender-600 text-white flex items-center justify-center text-xs font-bold absolute left-0 top-0">●</span>
+                    <div class="text-xs font-bold text-lavender-700">Awaiting merchant review</div>
+                    <div class="text-[11px] text-slate-500">Standard SLA: 3–5 business days (Sandbox state)</div>
+                  </li>
+                </ol>
+              </section>
+
+              <!-- Right 7 Cols: Complete Audit Log -->
+              <section
+                id="request-audit-log"
+                data-testid="request-audit-log"
+                class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4"
+              >
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h2 class="text-base font-bold text-navy-900">Structured Sandbox Audit Log</h2>
+                  <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-700">Immutable Record</span>
+                </div>
+
+                <div class="bg-navy-950 text-slate-100 rounded-xl p-4 font-mono text-xs space-y-2 overflow-x-auto">
+                  <div class="text-lavender-300 font-semibold">// Form fields supplied &amp; consent verification</div>
+                  <div><span class="text-slate-400">request_id:</span> "${escapeHtml(req.id)}"</div>
+                  <div><span class="text-slate-400">merchant:</span> "${escapeHtml(req.merchant)}"</div>
+                  <div><span class="text-slate-400">order_id:</span> "${escapeHtml(req.orderId)}"</div>
+                  <div><span class="text-slate-400">item:</span> "${escapeHtml(req.item)}"</div>
+                  <div><span class="text-slate-400">amount:</span> "${escapeHtml(req.amountNumeric)}"</div>
+                  <div><span class="text-slate-400">currency:</span> "${escapeHtml(req.currency)}"</div>
+                  <div><span class="text-slate-400">issue_reason:</span> "${escapeHtml(req.reason)}"</div>
+                  <div><span class="text-slate-400">description:</span> "${escapeHtml(req.description)}"</div>
+                  <div><span class="text-slate-400">evidence_summary:</span> "${escapeHtml(req.evidenceSummary)}"</div>
+                  <div><span class="text-slate-400">policy_result:</span> "${escapeHtml(req.policyResult)}"</div>
+                  <div><span class="text-slate-400">consent_recorded:</span> <span class="text-limebrand-500 font-bold">true ("I confirm that I want to submit this sandbox refund request.")</span></div>
+                  <div><span class="text-slate-400">submission_time:</span> "${escapeHtml(req.createdIso)}"</div>
+                  <div><span class="text-slate-400">environment:</span> <span class="text-amber-300 font-bold">"Submitted in DemoMart sandbox only"</span></div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-between">
+                  <span class="text-xs text-slate-500">Status: <strong>${escapeHtml(req.status)}</strong></span>
+                  <a
+                    href="/requests"
+                    data-route="/requests"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 font-semibold text-xs transition"
+                  >
+                    <span>Return to My Requests</span>
+                  </a>
+                </div>
+              </section>
+            </div>
+          </div>
+        `;
+      }
+
+      // 9. HELP CENTRE PAGE (/help-centre)
+      function renderHelpCentreView() {
+        return `
+          <div data-testid="page-help-centre" class="max-w-4xl mx-auto space-y-6">
+            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-2">
+              <span class="text-xs font-mono uppercase tracking-wider text-lavender-600 font-semibold">Support &amp; QA Documentation</span>
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-navy-900">DemoMart India Help Centre</h1>
+              <p class="text-sm text-slate-600">
+                Everything you need to test the DemoMart India sandbox with ClaimBack claim packets and TinyFish browser automation.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3">
+                <h2 class="text-base font-bold text-navy-900">ClaimBack Interoperability Packet</h2>
+                <p class="text-xs text-slate-600">The refund request form (<code class="font-mono">/refund-request</code>) is designed to accept this exact structured payload:</p>
+                <ul class="text-xs space-y-1.5 font-mono bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-navy-900">
+                  <li><strong>Merchant:</strong> DemoMart India</li>
+                  <li><strong>Order ID:</strong> QA-ORDER-2026-1001</li>
+                  <li><strong>Amount:</strong> 1299 (INR)</li>
+                  <li><strong>Issue:</strong> Product arrived damaged</li>
+                  <li><strong>Description:</strong> The right earbud arrived cracked and does not charge.</li>
+                  <li><strong>Evidence:</strong> Synthetic ClaimBack QA receipt verified.</li>
+                  <li><strong>Policy Result:</strong> Damaged product claims may be raised within 7 days of delivery.</li>
+                </ul>
+              </div>
+
+              <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+                <div class="space-y-2">
+                  <h2 class="text-base font-bold text-navy-900">Human-in-the-Loop Safety Boundary</h2>
+                  <p class="text-xs text-slate-600 leading-relaxed">
+                    Automation agents can browse <code class="font-mono">/refund-policy</code>, log in at <code class="font-mono">/login</code>, inspect <code class="font-mono">/orders/QA-ORDER-2026-1001</code>, and populate Steps 1 &amp; 2 of <code class="font-mono">/refund-request</code>.
+                  </p>
+                  <p class="text-xs text-slate-600 leading-relaxed">
+                    On Step 3 (Review Request), the submit button (<code class="font-mono">#submit-refund-request</code>) remains strictly disabled until the customer explicitly checks <code class="font-mono">#customer-consent</code>.
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2 pt-3">
+                  <a href="/refund-policy" data-route="/refund-policy" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-navy-900 text-xs font-semibold">Read Refund Policy</a>
+                  <a href="/refund-request" data-route="/refund-request" class="px-4 py-2 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white text-xs font-semibold">Open Refund Form</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ============================================================================
+      // MAIN RENDER SWITCH
+      // ============================================================================
+      function renderApp() {
+        renderChrome();
+        const mainEl = document.getElementById('app-main');
+        if (!mainEl) return;
+
+        const path = appState.currentPath;
+
+        if (path === '/' || path === '/index.html') {
+          mainEl.innerHTML = renderHomeView();
+        } else if (path === '/refund-policy') {
+          mainEl.innerHTML = renderRefundPolicyView();
+        } else if (path === '/login') {
+          mainEl.innerHTML = renderLoginView();
+        } else if (path === '/signup') {
+          mainEl.innerHTML = renderSignupView();
+        } else if (path === '/orders') {
+          mainEl.innerHTML = renderOrdersView();
+        } else if (path.startsWith('/orders/')) {
+          mainEl.innerHTML = renderOrderDetailView();
+        } else if (path === '/refund-request') {
+          mainEl.innerHTML = renderRefundRequestView();
+        } else if (path === '/requests') {
+          mainEl.innerHTML = renderRequestsListView();
+        } else if (path.startsWith('/requests/')) {
+          const reqId = path.replace('/requests/', '').trim();
+          mainEl.innerHTML = renderRequestDetailView(reqId);
+        } else if (path === '/help-centre') {
+          mainEl.innerHTML = renderHelpCentreView();
+        } else {
+          mainEl.innerHTML = renderHomeView();
+        }
+      }
+
+      // ============================================================================
+      // USER & AUTOMATION INTERACTION HANDLERS
+      // ============================================================================
+      function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function formatDisplayAmount(raw) {
+        const cleaned = String(raw || '').replace(/[^\d]/g, '');
+        if (!cleaned) return '₹1,299';
+        if (cleaned === '1299') return '₹1,299';
+        return '₹' + Number(cleaned).toLocaleString('en-IN');
+      }
+
+      // Login & Signup actions
+      function fillDemoCredentials() {
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-password');
+        if (emailInput) emailInput.value = SANDBOX_CREDENTIALS.email;
+        if (passInput) passInput.value = SANDBOX_CREDENTIALS.password;
+      }
+
+      function fillCustomUserCredentials(index) {
+        const user = (appState.users || [])[index];
+        if (!user) return;
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-password');
+        if (emailInput) emailInput.value = user.email;
+        if (passInput) passInput.value = user.password;
+        showToast(`Filled credentials for ${user.email}`);
+      }
+
+      function fillSampleSignup() {
+        const randomNum = Math.floor(100 + Math.random() * 900);
+        const nameEl = document.getElementById('signup-name');
+        const emailEl = document.getElementById('signup-email');
+        const passEl = document.getElementById('signup-password');
+        const confirmEl = document.getElementById('signup-confirm-password');
+
+        if (nameEl) nameEl.value = 'Aarav Sharma';
+        if (emailEl) emailEl.value = `aarav.sharma.${randomNum}@demomart.test`;
+        if (passEl) passEl.value = 'SandboxPass123!';
+        if (confirmEl) confirmEl.value = 'SandboxPass123!';
+        showToast('Auto-filled sample sandbox customer details.');
+      }
+
+      function handleSignupSubmit(event) {
+        if (event) event.preventDefault();
+        const nameEl = document.getElementById('signup-name');
+        const emailEl = document.getElementById('signup-email');
+        const passEl = document.getElementById('signup-password');
+        const confirmEl = document.getElementById('signup-confirm-password');
+        const errorBox = document.getElementById('signup-error-box');
+
+        const name = (nameEl ? nameEl.value : '').trim();
+        const email = (emailEl ? emailEl.value : '').trim().toLowerCase();
+        const password = (passEl ? passEl.value : '').trim();
+        const confirmPassword = (confirmEl ? confirmEl.value : '').trim();
+
+        const showError = (msg) => {
+          if (errorBox) {
+            errorBox.textContent = msg;
+            errorBox.classList.remove('hidden');
+          }
+        };
+
+        if (!name || !email || !password) {
+          showError('Please fill in your full name, email address, and password.');
+          return;
+        }
+        if (!email.includes('@')) {
+          showError('Please enter a valid sandbox email address.');
+          return;
+        }
+        if (password.length < 6) {
+          showError('Password must be at least 6 characters long.');
+          return;
+        }
+        if (password !== confirmPassword) {
+          showError('Passwords do not match. Please verify your confirmation password.');
+          return;
+        }
+
+        if (!Array.isArray(appState.users)) {
+          appState.users = [];
+        }
+
+        const existingIdx = appState.users.findIndex(u => u.email.toLowerCase() === email);
+        const newUserRecord = {
+          name,
+          email,
+          password,
+          provisionedOrderId: SAMPLE_ORDER.orderId,
+          createdAt: new Date().toISOString()
+        };
+
+        if (existingIdx >= 0) {
+          appState.users[existingIdx] = newUserRecord;
+        } else {
+          appState.users.unshift(newUserRecord);
+        }
+
+        // Automatically sign the user in & provision QA-ORDER-2026-1001
+        appState.auth = {
+          isLoggedIn: true,
+          email: newUserRecord.email,
+          name: newUserRecord.name,
+          loginTime: new Date().toISOString()
+        };
+        persistState();
+
+        showToast(`Sandbox account created for ${newUserRecord.name}. Sample order QA-ORDER-2026-1001 provisioned!`);
+        const target = appState.postLoginRedirect || '/orders';
+        appState.postLoginRedirect = '/orders';
+        navigate(target);
+      }
+
+      function handleLoginSubmit(event) {
+        if (event) event.preventDefault();
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-password');
+        const errorBox = document.getElementById('login-error-box');
+
+        const email = (emailInput ? emailInput.value : '').trim();
+        const password = (passInput ? passInput.value : '').trim();
+
+        // 1. Check default deterministic QA credentials
+        const isDefaultMatch =
+          email.toLowerCase() === SANDBOX_CREDENTIALS.email.toLowerCase() &&
+          password === SANDBOX_CREDENTIALS.password;
+
+        // 2. Check custom accounts stored in localStorage (demomart_users_v1)
+        const matchedCustomUser = (appState.users || []).find(
+          u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+        );
+
+        if (isDefaultMatch || matchedCustomUser) {
+          const activeUser = matchedCustomUser
+            ? { email: matchedCustomUser.email, name: matchedCustomUser.name }
+            : { email: SANDBOX_CREDENTIALS.email, name: SANDBOX_CREDENTIALS.customerName };
+
+          appState.auth = {
+            isLoggedIn: true,
+            email: activeUser.email,
+            name: activeUser.name,
+            loginTime: new Date().toISOString()
+          };
+          persistState();
+          showToast(`Signed in as ${activeUser.name} (${activeUser.email}).`);
+          const target = appState.postLoginRedirect || '/orders';
+          appState.postLoginRedirect = '/orders';
+          navigate(target);
+        } else {
+          if (errorBox) {
+            errorBox.textContent = 'Invalid credentials. Use demo.customer@demomart.test (DemoPass123!) or create a custom sandbox account on /signup.';
+            errorBox.classList.remove('hidden');
+          }
+        }
+      }
+
+      function instantSandboxLogin(redirectRoute) {
+        appState.auth = {
+          isLoggedIn: true,
+          email: SANDBOX_CREDENTIALS.email,
+          name: SANDBOX_CREDENTIALS.customerName,
+          loginTime: new Date().toISOString()
+        };
+        persistState();
+        showToast('Signed in as Demo Customer.');
+        navigate(redirectRoute || '/orders');
+      }
+
+      function logout() {
+        appState.auth = {
+          isLoggedIn: false,
+          email: null,
+          name: null,
+          loginTime: null
+        };
+        persistState();
+        showToast('Signed out of sandbox session.', 'warning');
+        navigate('/login');
+      }
+
+      function openSampleOrderFromHome() {
+        if (!appState.auth.isLoggedIn) {
+          appState.auth = {
+            isLoggedIn: true,
+            email: SANDBOX_CREDENTIALS.email,
+            name: SANDBOX_CREDENTIALS.customerName,
+            loginTime: new Date().toISOString()
+          };
+          persistState();
+        }
+        navigate('/orders/QA-ORDER-2026-1001');
+      }
+
+      function startRefundForOrder(orderId) {
+        appState.draftForm.orderIdInput = orderId || SAMPLE_ORDER.orderId;
+        appState.draftForm.orderVerified = true;
+        appState.draftForm.step = 2;
+        appState.draftForm.validationError = '';
+        persistState();
+        navigate('/refund-request');
+      }
+
+      // Refund Form Step & Field Handlers
+      function syncActiveDomFieldsToDraft() {
+        const orderEl = document.getElementById('order-id');
+        if (orderEl) appState.draftForm.orderIdInput = orderEl.value;
+
+        const reasonEl = document.getElementById('refund-reason');
+        if (reasonEl) appState.draftForm.reason = reasonEl.value;
+
+        const descEl = document.getElementById('refund-description');
+        if (descEl) appState.draftForm.description = descEl.value;
+
+        const amountEl = document.getElementById('refund-amount');
+        if (amountEl) appState.draftForm.amount = amountEl.value;
+
+        const evidenceEl = document.getElementById('evidence-summary');
+        if (evidenceEl) appState.draftForm.evidenceSummary = evidenceEl.value;
+
+        const consentEl = document.getElementById('customer-consent');
+        if (consentEl) appState.draftForm.consentChecked = Boolean(consentEl.checked);
+      }
+
+      function updateDraftField(field, value) {
+        appState.draftForm[field] = value;
+        appState.draftForm.validationError = '';
+        persistState();
+      }
+
+      function quickFillOrderId() {
+        appState.draftForm.orderIdInput = SAMPLE_ORDER.orderId;
+        appState.draftForm.orderVerified = true;
+        appState.draftForm.validationError = '';
+        persistState();
+        renderApp();
+      }
+
+      function findOrder() {
+        syncActiveDomFieldsToDraft();
+        const entered = (appState.draftForm.orderIdInput || '').trim().toUpperCase();
+        if (entered === SAMPLE_ORDER.orderId) {
+          appState.draftForm.orderIdInput = SAMPLE_ORDER.orderId;
+          appState.draftForm.orderVerified = true;
+          appState.draftForm.validationError = '';
+          persistState();
+          renderApp();
+          showToast('Order QA-ORDER-2026-1001 verified.');
+        } else {
+          appState.draftForm.orderVerified = false;
+          appState.draftForm.validationError = 'Order ID not found in sandbox. Please enter QA-ORDER-2026-1001.';
+          persistState();
+          renderApp();
+        }
+      }
+
+      function goToRefundStep(targetStep) {
+        syncActiveDomFieldsToDraft();
+        if (targetStep >= 2 && !appState.draftForm.orderVerified) {
+          if ((appState.draftForm.orderIdInput || '').trim().toUpperCase() === SAMPLE_ORDER.orderId) {
+            appState.draftForm.orderIdInput = SAMPLE_ORDER.orderId;
+            appState.draftForm.orderVerified = true;
+          } else {
+            appState.draftForm.orderIdInput = SAMPLE_ORDER.orderId;
+            appState.draftForm.orderVerified = true;
+          }
+        }
+        appState.draftForm.step = targetStep;
+        appState.draftForm.validationError = '';
+        persistState();
+        renderApp();
+      }
+
+      function proceedToReviewStep() {
+        syncActiveDomFieldsToDraft();
+        if (!appState.draftForm.orderIdInput) {
+          appState.draftForm.orderIdInput = SAMPLE_ORDER.orderId;
+          appState.draftForm.orderVerified = true;
+        }
+        if (!appState.draftForm.reason) {
+          appState.draftForm.validationError = 'Please select a refund reason before reviewing your request.';
+          persistState();
+          renderApp();
+          return;
+        }
+        if (!appState.draftForm.description || !appState.draftForm.description.trim()) {
+          appState.draftForm.validationError = 'Please provide an issue description before reviewing your request.';
+          persistState();
+          renderApp();
+          return;
+        }
+        if (!appState.draftForm.evidenceSummary || !appState.draftForm.evidenceSummary.trim()) {
+          appState.draftForm.validationError = 'Please provide a supporting evidence summary.';
+          persistState();
+          renderApp();
+          return;
+        }
+
+        appState.draftForm.step = 3;
+        appState.draftForm.validationError = '';
+        persistState();
+        renderApp();
+      }
+
+      function handleReceiptUpload(inputEl) {
+        if (inputEl && inputEl.files && inputEl.files[0]) {
+          appState.draftForm.receiptFileName = inputEl.files[0].name;
+          persistState();
+          renderApp();
+        }
+      }
+
+      function toggleConsentCheckbox(isChecked) {
+        appState.draftForm.consentChecked = Boolean(isChecked);
+        persistState();
+        const submitBtn = document.getElementById('submit-refund-request');
+        if (submitBtn) {
+          submitBtn.disabled = !appState.draftForm.consentChecked;
+          if (appState.draftForm.consentChecked) {
+            submitBtn.className = 'w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition shadow-sm bg-limebrand-600 hover:bg-limebrand-700 text-white cursor-pointer';
+          } else {
+            submitBtn.className = 'w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition shadow-sm bg-slate-200 text-slate-400 cursor-not-allowed';
+          }
+        }
+      }
+
+      // Helper to populate the exact ClaimBack QA packet (stops prior to checking consent!)
+      function autoFillClaimBackPacket() {
+        appState.draftForm = {
+          step: 2,
+          orderIdInput: CLAIMBACK_PACKET.orderId,
+          orderVerified: true,
+          reason: CLAIMBACK_PACKET.issue,
+          description: CLAIMBACK_PACKET.description,
+          amount: CLAIMBACK_PACKET.amount,
+          evidenceSummary: CLAIMBACK_PACKET.evidenceSummary,
+          receiptFileName: 'claimback-qa-receipt.pdf',
+          consentChecked: false,
+          validationError: ''
+        };
+        persistState();
+        renderApp();
+        showToast('ClaimBack QA Packet filled. Review details and advance to Step 3.');
+      }
+
+      function clearValidationError() {
+        appState.draftForm.validationError = '';
+        persistState();
+        renderApp();
+      }
+
+      function submitSandboxRefundRequest() {
+        syncActiveDomFieldsToDraft();
+        if (!appState.draftForm.consentChecked) {
+          appState.draftForm.validationError = 'Explicit customer confirmation is required before submitting.';
+          persistState();
+          renderApp();
+          return;
+        }
+
+        // Ensure user is logged in so /requests and /requests/:id work seamlessly
+        if (!appState.auth.isLoggedIn) {
+          appState.auth = {
+            isLoggedIn: true,
+            email: SANDBOX_CREDENTIALS.email,
+            name: SANDBOX_CREDENTIALS.customerName,
+            loginTime: new Date().toISOString()
+          };
+        }
+
+        const seqNum = 9001 + appState.requests.length;
+        const reqId = `REQ-2026-${seqNum}`;
+        const now = new Date();
+
+        const rawAmount = String(appState.draftForm.amount || '1299').replace(/[^\d]/g, '') || '1299';
+
+        const newRequest = {
+          id: reqId,
+          merchant: 'DemoMart India',
+          orderId: appState.draftForm.orderIdInput || SAMPLE_ORDER.orderId,
+          item: SAMPLE_ORDER.item,
+          reason: appState.draftForm.reason || CLAIMBACK_PACKET.issue,
+          description: appState.draftForm.description || CLAIMBACK_PACKET.description,
+          amountNumeric: rawAmount,
+          amountDisplay: formatDisplayAmount(rawAmount),
+          currency: 'INR',
+          evidenceSummary: appState.draftForm.evidenceSummary || CLAIMBACK_PACKET.evidenceSummary,
+          receiptFileName: appState.draftForm.receiptFileName || 'None attached',
+          policyResult: CLAIMBACK_PACKET.policyResult,
+          status: 'Received for review',
+          consentRecorded: true,
+          createdIso: now.toISOString(),
+          createdFormatted: now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC',
+          environmentNote: 'Submitted in DemoMart sandbox only'
+        };
+
+        appState.requests.unshift(newRequest);
+        // Reset draft form for future test runs
+        appState.draftForm = getDefaultDraftForm();
+        persistState();
+
+        showToast(`Sandbox request ${reqId} submitted for review.`);
+        navigate(`/requests/${reqId}`);
+      }
+
+      function resetSandbox() {
+        appState.users = [];
+        appState.auth = {
+          isLoggedIn: false,
+          email: null,
+          name: null,
+          loginTime: null
+        };
+        appState.requests = [];
+        appState.draftForm = getDefaultDraftForm();
+        persistState();
+        showToast('Sandbox state reset to clean initial defaults.', 'warning');
+        navigate('/');
+      }
+
+      // ============================================================================
+      // PROJECT DOCS MODAL (README.md, vercel.json, api/requests.js, package.json)
+      // ============================================================================
+      function toggleProjectDocsModal() {
+        const modal = document.getElementById('project-docs-modal');
+        if (!modal) return;
+        const isHidden = modal.classList.contains('hidden');
+        if (isHidden) {
+          modal.classList.remove('hidden');
+          selectDocTab(appState.activeDocTab || 'readme');
+        } else {
+          modal.classList.add('hidden');
+        }
+      }
+
+      function selectDocTab(tabKey) {
+        appState.activeDocTab = tabKey;
+        const codeEl = document.getElementById('doc-code-content');
+        if (codeEl) {
+          codeEl.textContent = PROJECT_FILES[tabKey] || '';
+        }
+        ['readme', 'vercel', 'api', 'package'].forEach(key => {
+          const btn = document.getElementById(`doc-tab-${key}`);
+          if (!btn) return;
+          if (key === tabKey) {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-navy-900 text-white';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-white text-slate-700 hover:bg-slate-200';
+          }
+        });
+      }
+
+      function copyActiveDoc() {
+        const content = PROJECT_FILES[appState.activeDocTab] || '';
+        const temp = document.createElement('textarea');
+        temp.value = content;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+          document.execCommand('copy');
+          showToast(`Copied ${appState.activeDocTab} file contents to clipboard.`);
+        } catch (err) {
+          showToast('Unable to copy automatically; please select and copy manually.', 'warning');
+        }
+        document.body.removeChild(temp);
+      }
+
+      // ============================================================================
+      // EXPOSE PUBLIC API FOR INLINE HANDLERS & AUTOMATION SCRIPTS
+      // ============================================================================
+      window.DemoMartApp = {
+        navigate,
+        fillDemoCredentials,
+        fillCustomUserCredentials,
+        fillSampleSignup,
+        handleSignupSubmit,
+        handleLoginSubmit,
+        instantSandboxLogin,
+        logout,
+        openSampleOrderFromHome,
+        startRefundForOrder,
+        updateDraftField,
+        quickFillOrderId,
+        findOrder,
+        goToRefundStep,
+        proceedToReviewStep,
+        handleReceiptUpload,
+        toggleConsentCheckbox,
+        autoFillClaimBackPacket,
+        clearValidationError,
+        submitSandboxRefundRequest,
+        resetSandbox,
+        toggleProjectDocsModal,
+        selectDocTab,
+        copyActiveDoc
+      };
+
+      // Initialize route on load
+      window.addEventListener('DOMContentLoaded', function () {
+        const initialHash = window.location.hash ? window.location.hash.slice(1) : '';
+        const initialPath = initialHash || window.location.pathname || '/';
+        appState.currentPath = normalizePath(initialPath);
+        renderApp();
+      });
+    })();
+  </script>
+</body>
+</html>
